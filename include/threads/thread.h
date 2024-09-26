@@ -91,9 +91,19 @@ struct thread {
 	enum thread_status status;          /* Thread state. */
 	char name[16];                      /* Name (for debugging purposes). */
 	int priority;                       /* Priority. */
+	int64_t wake_up;
 
 	/* Shared between thread.c and synch.c. */
 	struct list_elem elem;              /* List element. */
+
+	struct lock *waiting_lock;
+	int orig_priority;
+	struct list donors_list; // for multiple donation
+	struct list_elem donors_list_elem;
+
+	/* Variables for implementing 4.4BSD Scheduler */
+	int nice;
+	int recent_cpu;
 
 #ifdef USERPROG
 	/* Owned by userprog/process.c. */
@@ -116,6 +126,11 @@ extern bool thread_mlfqs;
 
 void thread_init (void);
 void thread_start (void);
+void thread_sleep (int64_t ticks);
+void thread_wakeup (int64_t ticks);
+bool wakeup_ticks_cmp(const struct list_elem *a, const struct list_elem *b, void *aux);
+bool priority_cmp(const struct list_elem *a, const struct list_elem *b, void *aux);
+void check_priority (void);
 
 void thread_tick (void);
 void thread_print_stats (void);
@@ -140,6 +155,15 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
+
+// Some functions to implement mlfqs (priority, recent_cpu, load_avg)
+void calculate_priority(struct thread*);
+void calculate_recent_cpu(struct thread*);
+void calculate_load_avg(void);
+
+void inc_recent_cpu(void);
+void recal_threads_priority(void);
+void recal_threads_recent_cpu(void);
 
 void do_iret (struct intr_frame *tf);
 
