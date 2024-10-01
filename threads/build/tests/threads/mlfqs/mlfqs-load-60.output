@@ -1,17 +1,10 @@
-c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
-
-
-iPXE (https://ipxe.org) 00:03.0 CA00 PCI2.10 PnP PMM+0138B4A0+012CB4A0 CA00
-Press Ctrl-B to configure iPXE (PCI 00:03.0)...                                                                               
-
-
-Booting from Hard Disk..Kernel command line: -q -mlfqs run mlfqs-load-60
+Kernel command line: -q -mlfqs run mlfqs-load-60
 0 ~ 9fc00 1
 100000 ~ 13e0000 1
 Pintos booting with: 
 	base_mem: 0x0 ~ 0x9fc00 (Usable: 639 kB)
 	ext_mem: 0x100000 ~ 0x13e0000 (Usable: 19,328 kB)
-Calibrating timer...  419,020,800 loops/s.
+Calibrating timer...  157,081,600 loops/s.
 Boot complete.
 Executing 'mlfqs-load-60':
 (mlfqs-load-60) begin
@@ -109,8 +102,8 @@ Executing 'mlfqs-load-60':
 (mlfqs-load-60) After 178 seconds, load average=5.24.
 (mlfqs-load-60) end
 Execution of 'mlfqs-load-60' complete.
-Timer: 18822 ticks
-Thread: 12799 idle ticks, 6023 kernel ticks, 0 user ticks
+Timer: 18841 ticks
+Thread: 12789 idle ticks, 6052 kernel ticks, 0 user ticks
 Console: 5406 characters output
 Keyboard: 0 keys pressed
 Powering off...

@@ -131,12 +131,14 @@ timer_interrupt (struct intr_frame *args UNUSED) {
 		// every 4 ticks, every threads should recalculate their own priority
 		if (ticks % 4 == 0) {
 			recal_threads_priority ();
+			if (ticks % TIMER_FREQ == 0) {
+				// once per second, every threads should recalculate their own recent_cpu
+				calculate_load_avg ();
+				recal_threads_recent_cpu ();
+
+			}
 		}
-		if (ticks % TIMER_FREQ == 0) {
-			// once per second, every threads should recalculate their own recent_cpu
-			recal_threads_recent_cpu ();
-			calculate_load_avg ();
-		}
+		
 
 	}
 
