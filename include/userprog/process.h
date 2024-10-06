@@ -5,6 +5,7 @@
 
 tid_t process_create_initd (const char *file_name);
 tid_t process_fork (const char *name, struct intr_frame *if_);
+void args_stack (char **argv, int argc, void **rsp);
 int process_exec (void *f_name);
 int process_wait (tid_t);
 void process_exit (void);

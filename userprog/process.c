@@ -50,6 +50,8 @@ process_create_initd (const char *file_name) {
 		return TID_ERROR;
 	strlcpy (fn_copy, file_name, PGSIZE);
 
+	char *save_ptr;
+	strtok_r(file_name, " ", &save_ptr);
 	/* Create a new thread to execute FILE_NAME. */
 	tid = thread_create (file_name, PRI_DEFAULT, initd, fn_copy);
 	if (tid == TID_ERROR)
@@ -175,17 +177,21 @@ process_exec (void *f_name) {
 
 	/* We first kill the current context */
 	process_cleanup ();
-
+	// new execution file을 current thread에 넣기 전, current process에 allocate된 page directory를 지워줌.
+	
 	/* And then load the binary */
 	success = load (file_name, &_if);
+	// current process에 file_name과 if를 load.
+	// 이 load 함수 안에서 file_name을 조작해줘야 함!
 
 	/* If load failed, quit. */
 	palloc_free_page (file_name);
+	// 임시로 memory allocate된 file_name을 free해준다. (load에서 할당되었음)
 	if (!success)
 		return -1;
 
 	/* Start switched process. */
-	do_iret (&_if);
+	do_iret (&_if); // context switch
 	NOT_REACHED ();
 }
 
@@ -204,6 +210,7 @@ process_wait (tid_t child_tid UNUSED) {
 	/* XXX: Hint) The pintos exit if process_wait (initd), we recommend you
 	 * XXX:       to add infinite loop here before
 	 * XXX:       implementing the process_wait. */
+	while(true) {};
 	return -1;
 }
 
@@ -316,6 +323,43 @@ static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
 		uint32_t read_bytes, uint32_t zero_bytes,
 		bool writable);
 
+/* stack arguments of the function and their addresses */
+void args_stack (char **argv, int argc, void **rsp){
+	// stack에 argv string 쌓기 (argc -> 1 순으로)
+	for (int i = (argc-1); i >= 0; i--){
+		int argv_len = strlen(argv[i]);
+		for (int j = argv_len; j >= 0; j--){
+			(*rsp)--;
+			**(char **)rsp = argv[i][j];
+		}
+		argv[i] = *(char **)rsp; // insert address of current rsp, instead of argument string
+		// will be pushed to the stack later
+	}
+	// word-align padding before pushing addresses of argvs
+	// stack pointer가 8-byte 정렬이 되어야 함!
+
+	int padding = (int)(*rsp) % 8;
+	for (int i = 0; i < padding; i++){
+		(*rsp)--;
+		**(uint8_t **)rsp = 0;
+	}
+
+	// push 0 to indicate null pointer
+	(*rsp) -= 8;
+	**(char ***)rsp = 0; // NULL pointer (push 0 as a pointer value) -> (char *) type
+	// 우리는 지금 역순으로 가고 있다는 것을 기억...
+
+	// push addresses of strings(argvs)
+	for (int i = (argc - 1); i >= 0; i--){
+		(*rsp) -= 8;
+		**(char ***)rsp = argv[i]; // (char *) type
+	}
+
+	// fake return address 0
+	(*rsp) -= 8;
+	**(void ***)rsp = 0;
+}
+
 /* Loads an ELF executable from FILE_NAME into the current thread.
  * Stores the executable's entry point into *RIP
  * and its initial stack pointer into *RSP.
@@ -328,6 +372,15 @@ load (const char *file_name, struct intr_frame *if_) {
 	off_t file_ofs;
 	bool success = false;
 	int i;
+
+	/* ADD: file_name parsing */
+	char *parse[64]; // commands-line argument에 128bytes limit이 있기 때문.
+	char *save_ptr;
+	int parse_idx = 0;
+	// string tokenizing을 위해 string.c에 있는 strtok_r 함수를 사용.
+	for(char *token = strtok_r(file_name, " ", &save_ptr); token != NULL; token = strtok_r(NULL, " ", &save_ptr)){
+		parse[parse_idx++] = token;
+	}
 
 	/* Allocate and activate page directory. */
 	t->pml4 = pml4_create ();
@@ -416,6 +469,12 @@ load (const char *file_name, struct intr_frame *if_) {
 
 	/* TODO: Your code goes here.
 	 * TODO: Implement argument passing (see project2/argument_passing.html). */
+
+	/* ADD: stack arguments of function */
+	/* NEED TO IMPLEMENT: args_stack() */
+	args_stack(parse, parse_idx, &if_->rsp);
+	if_->R.rdi = parse_idx; // same as argc
+	if_->R.rsi = ((char *)if_->rsp) + 8; // address of argv
 
 	success = true;
 

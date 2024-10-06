@@ -24,6 +24,13 @@ void syscall_handler (struct intr_frame *);
 #define MSR_LSTAR 0xc0000082        /* Long mode SYSCALL target */
 #define MSR_SYSCALL_MASK 0xc0000084 /* Mask for the eflags */
 
+// To implement syscalls, virtual address space에서 data를 읽고 쓸 방법을 구현해야 함....
+// System call의 인자로 들어온 pointer로부터 data를 읽어야 할 때 필요. (그래서 여기서 구현)
+void check_address(void *addr){
+	if(addr == NULL || is_kernel_vaddr(addr) || pml4_get_page(thread_current()->pml4, addr) == NULL)
+		exit(-1);
+}
+
 void
 syscall_init (void) {
 	write_msr(MSR_STAR, ((uint64_t)SEL_UCSEG - 0x10) << 48  |
@@ -41,6 +48,81 @@ syscall_init (void) {
 void
 syscall_handler (struct intr_frame *f UNUSED) {
 	// TODO: Your implementation goes here.
+	// int syscall_num = (f->R.rax);
+	// switch(syscall_num){
+	// 	case SYS_HALT:
+	// 		halt();
+	// 		break;
+	// 	case SYS_EXIT:
+	// 		exit(f->R.rdi);
+	// 		break;
+	// 	case SYS_FORK:
+	// 		(f->R.rax) = fork(f->R.rdi);
+	// 		break;
+	// 	case SYS_EXEC:
+	// 		(f->R.rax) = exec(f->R.rdi);
+	// 		break;
+	// 	case SYS_WAIT:
+	// 		(f->R.rax) = wait(f->R.rdi);
+	// 		break;
+	// 	case SYS_CREATE:
+	// 		(f->R.rax) = create(f->R.rdi, f->R.rsi);
+	// 		break;
+	// 	case SYS_REMOVE:
+	// 		(f->R.rax) = remove(f->R.rdi);
+	// 		break;
+	// 	case SYS_OPEN:
+	// 		(f->R.rax) = open(f->R.rdi);
+	// 		break;
+	// 	case SYS_FILESIZE:
+	// 		(f->R.rax) = filesize(f->R.rdi);
+	// 		break;
+	// 	case SYS_READ:
+	// 		(f->R.rax) = read(f->R.rdi, f->R.rsi, f->R.rdx);
+	// 		break;
+	// 	case SYS_WRITE:
+	// 		(f->R.rax) = write(f->R.rdi, f->R.rsi, f->R.rdx);
+	// 		break;
+	// 	case SYS_SEEK:
+	// 		seek(f->R.rdi, f->R.rsi);
+	// 		break;
+	// 	case SYS_TELL:
+	// 		(f->R.rax) = tell(f->R.rdi);
+	// 		break;
+	// 	case SYS_CLOSE:
+	// 		close(f->R.rdi);
+	// }
+
 	printf ("system call!\n");
 	thread_exit ();
 }
+
+// void halt (void){
+// 	power_off();
+// }
+
+void exit (int status){
+	/* Should implement code about returning state */
+	thread_exit();
+}
+
+// pid_t fork (const char *thread_name){
+	
+// }
+
+// int exec (const char *cmd_line){
+// }
+
+// int wait (pid_t pid){
+// }
+
+// bool create (const char *file, unsigned initial_size){
+// }
+// bool remove (const char *file){}
+// int open (const char *file){}
+// int filesize (int fd){}
+// int read (int fd, void *buffer, unsigned size){}
+// int write (int fd, const void *buffer, unsigned size){}
+// void seek (int fd, unsigned position){}
+// unsigned tell (int fd){}
+// void close (int fd){}
