@@ -277,6 +277,18 @@ thread_create (const char *name, int priority,
 	init_thread (t, name, priority);
 	tid = t->tid = allocate_tid ();
 
+#ifdef USERPROG
+	t -> fd_array = (struct file **)palloc_get_page(PAL_ZERO);
+	if(t -> fd_array == NULL){
+		palloc_free_page(t);
+		return TID_ERROR;
+	}
+
+	for(int i = 0; i<FD_LIMIT; i++){
+		t->fd_array[i] = NULL;
+	}
+#endif
+
 	/* Call the kernel_thread if it scheduled.
 	 * Note) rdi is 1st argument, and rsi is 2nd argument. */
 	t->tf.rip = (uintptr_t) kernel_thread;
@@ -631,6 +643,10 @@ init_thread (struct thread *t, const char *name, int priority) {
 	// Additional initialization for the implementation of 4.4BSD Scheduler
 	t -> nice = 0; // default value of niceness
 	t -> recent_cpu = 0; // default value of "How much this thread used the CPU recently"
+
+	// Additional initialization for the implementation for system call
+	t -> fd_index = 2;
+	t -> exit_code = 0;
 }
 
 /* Chooses and returns the next thread to be scheduled.  Should
