@@ -223,6 +223,14 @@ process_exit (void) {
 	 * TODO: project2/process_termination.html).
 	 * TODO: We recommend you to implement process resource cleanup here. */
 
+	printf ("%s: exit(%d)\n", thread_name(), curr -> exit_code);
+
+	// open 상태의 파일들 전부 다 닫기 == fd_array 전부 초기화
+	for(int i = 0; i<FD_LIMIT; i++){
+		curr->fd_array[i] = NULL;
+	}
+
+	palloc_free_page((void*)curr->fd_array);
 	process_cleanup ();
 }
 
