@@ -206,9 +206,6 @@ int read (int fd, void *buffer, unsigned size){
 	int count;
 	struct file *open_file = find_file(fd);
 
-	if(open_file == NULL)
-		return -1;
-
 	if(fd == 0){									//stdin, use input_getc in devices/input.c
 		char input;
 		for(int count = 0; count < size; count++){
@@ -221,7 +218,7 @@ int read (int fd, void *buffer, unsigned size){
 		}
 	}
 
-	else if (fd == 1){								//stdout, return -1
+	else if (open_file == NULL){					//fd가 1인 경우는 open_file이 널인 경우를 포함
 		return -1;
 	}
 
@@ -245,16 +242,14 @@ int write (int fd, const void *buffer, unsigned size){
 
 	int count;
 	struct file *open_file = find_file(fd);
-	if(open_file == NULL){
-		return -1;
-	}
 
-	if (fd == 0) {
-		return -1;
-	}
-	else if (fd == 1){
+	if (fd == 1){
 		putbuf(buffer, size);				//use putbuf() in lib/kernel/console.c
 		count = size;
+	}
+	
+	else if (open_file == NULL){			//fd가 0인 경우는 open_file이 널인 경우를 포함
+		return -1;
 	}
 
 	else{
@@ -265,16 +260,15 @@ int write (int fd, const void *buffer, unsigned size){
 
 	return count;
 }
+
 void seek (int fd, unsigned position){
-	if(fd < 2){
-		return;
-	}
 	struct file *open_file = find_file(fd);
 	if(open_file == NULL){
 		return;
 	}
 	file_seek(open_file, position);
 }
+
 unsigned tell (int fd){
 	struct file *open_file = find_file(fd);
 	if(open_file == NULL){
@@ -282,6 +276,7 @@ unsigned tell (int fd){
 	}
 	return file_tell(fd);
 }
+
 void close (int fd){
 	struct thread *cur = thread_current();
 
