@@ -1,0 +1,40 @@
+Kernel command line: -q -f put multi-child-fd put sample.txt put child-close run multi-child-fd
+0 ~ 9fc00 1
+100000 ~ 13e0000 1
+Pintos booting with: 
+	base_mem: 0x0 ~ 0x9fc00 (Usable: 639 kB)
+	ext_mem: 0x100000 ~ 0x13e0000 (Usable: 19,328 kB)
+Calibrating timer...  157,081,600 loops/s.
+hd0:0: detected 321 sector (160 kB) disk, model "QEMU HARDDISK", serial "QM00001"
+hd0:1: detected 20,160 sector (9 MB) disk, model "QEMU HARDDISK", serial "QM00002"
+hd1:0: detected 220 sector (110 kB) disk, model "QEMU HARDDISK", serial "QM00003"
+Formatting file system...done.
+Boot complete.
+Putting 'multi-child-fd' into the file system...
+Putting 'sample.txt' into the file system...
+Putting 'child-close' into the file system...
+Executing 'multi-child-fd':
+(multi-child-fd) begin
+(multi-child-fd) open "sample.txt"
+(multi-child-fd) wait(exec()) = 4
+Page fault at 0x423d038: not present error reading page in kernel context.
+Interrupt 0x0e (#PF Page-Fault Exception) at rip=800421ef53
+ cr2=000000000423d038 error=               0
+rax 000000000423d038 rbx 0000000000000000 rcx 000000000040377a rdx 0000000000000010
+rsp 0000008004241ec0 rbp 0000008004241ed0 rsi 0000000000000000 rdi 000000000423d038
+rip 000000800421ef53 r8 0000000000000000  r9 0000000000000000 r10 0000000000000000
+r11 0000000000000216 r12 000000800421d269 r13 0000000000000000 r14 0000000000000000
+r15 0000000000000000 rflags 00000202
+es: 001b ds: 001b cs: 0008 ss: 0010
+Kernel PANIC at ../../userprog/exception.c:97 in kill(): Kernel bug - unexpected interrupt in kernel
+Call stack: 0x800421857f 0x800421ce49 0x800421cfc8 0x80042093b4 0x80042097d2 0x800421d60c 0x800421d365 0x800421d03d 0x40085a 0x400205 0x400263 0x400d04.
+The `backtrace' program can make call stacks useful.
+Read "Backtraces" in the "Debugging Tools" chapter
+of the Pintos documentation for more information.
+Timer: 327 ticks
+Thread: 36 idle ticks, 290 kernel ticks, 1 user ticks
+hd0:0: 0 reads, 0 writes
+hd0:1: 148 reads, 488 writes
+hd1:0: 220 reads, 0 writes
+Console: 1986 characters output
+Key

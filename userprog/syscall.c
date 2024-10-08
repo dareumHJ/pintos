@@ -137,6 +137,8 @@ void halt (void){
 
 void exit (int status){
 	/* Should implement code about returning state */
+	printf ("%s: exit(%d)\n", thread_name(), status);
+
 	thread_current() -> exit_code = status;
 	thread_exit();
 }

@@ -107,14 +107,14 @@ struct thread {
 	int nice;
 	int recent_cpu;
 
-	/* Variables for system call */
-	struct file **fd_array;		//file table
-	int fd_index;				//마지막으로 배정 or free 된 fd 값
-	int exit_code;				//exit code
 
 #ifdef USERPROG
 	/* Owned by userprog/process.c. */
 	uint64_t *pml4;                     /* Page map level 4 */
+	/* Variables for system call */
+	struct file **fd_array;		//file table
+	int fd_index;				//마지막으로 배정 or free 된 fd 값
+	int exit_code;				//exit code
 #endif
 #ifdef VM
 	/* Table for whole virtual memory owned by thread. */
