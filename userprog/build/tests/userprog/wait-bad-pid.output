@@ -16,12 +16,12 @@ Executing 'wait-bad-pid':
 (wait-bad-pid) end
 wait-bad-pid: exit(0)
 Execution of 'wait-bad-pid' complete.
-Timer: 611 ticks
-Thread: 34 idle ticks, 577 kernel ticks, 0 user ticks
+Timer: 80 ticks
+Thread: 31 idle ticks, 47 kernel ticks, 2 user ticks
 hd0:0: 0 reads, 0 writes
 hd0:1: 80 reads, 232 writes
 hd1:0: 102 reads, 0 writes
-Console: 866 characters output
+Console: 864 characters output
 Keyboard: 0 keys pressed
 Exception: 0 page faults
 Powering off...

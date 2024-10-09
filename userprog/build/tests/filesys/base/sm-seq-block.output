@@ -16,24 +16,19 @@ Executing 'sm-seq-block':
 (sm-seq-block) create "noodle"
 (sm-seq-block) open "noodle"
 (sm-seq-block) writing "noodle"
-Page fault at 0x423d040: not present error reading page in kernel context.
-Interrupt 0x0e (#PF Page-Fault Exception) at rip=800421ed89
- cr2=000000000423d040 error=               0
-rax 000000000423d038 rbx 0000000000000000 rcx 0000000000604f00 rdx 0000000000000201
-rsp 0000008004241ea0 rbp 0000008004241ed0 rsi 0000000000604f00 rdi 000000000423d038
-rip 000000800421ed89 r8 0000000000000000  r9 0000000000000000 r10 0000000000000000
-r11 0000000000000202 r12 000000800421d269 r13 000080042094ee00 r14 00008004241f2000
-r15 0000200000000200 rflags 00000206
-es: 001b ds: 001b cs: 0008 ss: 0010
-Kernel PANIC at ../../userprog/exception.c:97 in kill(): Kernel bug - unexpected interrupt in kernel
-Call stack: 0x800421857f 0x800421ce49 0x800421cfc8 0x80042093b4 0x80042097d2 0x800421d7d4 0x800421d3e1 0x800421d03d 0x400d07 0x400131 0x400e1a 0x400e63.
-The `backtrace' program can make call stacks useful.
-Read "Backtraces" in the "Debugging Tools" chapter
-of the Pintos documentation for more information.
-Timer: 457 ticks
-Thread: 33 idle ticks, 421 kernel ticks, 3 user ticks
+(sm-seq-block) close "noodle"
+(sm-seq-block) open "noodle" for verification
+(sm-seq-block) verified contents of "noodle"
+(sm-seq-block) close "noodle"
+(sm-seq-block) end
+sm-seq-block: exit(0)
+Execution of 'sm-seq-block' complete.
+Timer: 86 ticks
+Thread: 31 idle ticks, 50 kernel ticks, 5 user ticks
 hd0:0: 0 reads, 0 writes
-hd0:1: 107 reads, 266 writes
+hd0:1: 144 reads, 289 writes
 hd1:0: 107 reads, 0 writes
-Console: 1876 characters output
-Key
+Console: 1108 characters output
+Keyboard: 0 keys pressed
+Exception: 0 page faults
+Powering off...

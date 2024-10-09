@@ -644,9 +644,17 @@ init_thread (struct thread *t, const char *name, int priority) {
 	t -> nice = 0; // default value of niceness
 	t -> recent_cpu = 0; // default value of "How much this thread used the CPU recently"
 
+#ifdef USERPROG
 	// Additional initialization for the implementation for system call
 	t -> fd_index = 2;
 	t -> exit_code = 0;
+
+	// Additional initialization for the implementation for fork, wait
+	t -> parent_thread = NULL;
+	list_init(&t -> childs_list);
+	sema_init(&t -> wait_sema, 0);	//부모가 먼저 기다리기 위해서 sema_down을 할 것이기 때문에 0으로 초기화
+	sema_init(&t -> exit_sema, 0);
+#endif
 }
 
 /* Chooses and returns the next thread to be scheduled.  Should

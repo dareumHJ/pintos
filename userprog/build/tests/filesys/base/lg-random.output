@@ -14,13 +14,19 @@ Putting 'lg-random' into the file system...
 Executing 'lg-random':
 (lg-random) begin
 (lg-random) create "bazzle"
+(lg-random) open "bazzle"
+(lg-random) write "bazzle" in random order
+(lg-random) read "bazzle" in random order
+(lg-random) close "bazzle"
+(lg-random) end
+lg-random: exit(0)
 Execution of 'lg-random' complete.
-Timer: 606 ticks
-Thread: 35 idle ticks, 570 kernel ticks, 1 user ticks
+Timer: 90 ticks
+Thread: 34 idle ticks, 47 kernel ticks, 9 user ticks
 hd0:0: 0 reads, 0 writes
-hd0:1: 86 reads, 326 writes
+hd0:1: 259 reads, 560 writes
 hd1:0: 110 reads, 0 writes
-Console: 835 characters output
+Console: 1007 characters output
 Keyboard: 0 keys pressed
 Exception: 0 page faults
 Powering off...

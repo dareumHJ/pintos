@@ -7,6 +7,7 @@
 #include <list.h>
 #include <stdint.h>
 #include "threads/interrupt.h"
+#include "threads/synch.h"
 #ifdef VM
 #include "vm/vm.h"
 #endif
@@ -115,6 +116,14 @@ struct thread {
 	struct file **fd_array;		//file table
 	int fd_index;				//마지막으로 배정 or free 된 fd 값
 	int exit_code;				//exit code
+
+	/* Variables for fork, wait */
+	struct list childs_list;
+	struct list_elem child_elem;
+	struct thread *parent_thread;
+	struct semaphore wait_sema;		//부모가 자식 스레드의 종료를 기다리기 위한 semaphore
+	struct semaphore exit_sema;
+
 #endif
 #ifdef VM
 	/* Table for whole virtual memory owned by thread. */

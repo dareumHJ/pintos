@@ -13,16 +13,33 @@ Boot complete.
 Putting 'multi-oom' into the file system...
 Executing 'multi-oom':
 (multi-oom) begin
+Page fault at 0: not present error writing page in user context.
+child_6_X: dying due to interrupt 0x0e (#PF Page-Fault Exception).
+Interrupt 0x0e (#PF Page-Fault Exception) at rip=4001b0
+ cr2=0000000000000000 error=               6
+rax 0000000000000000 rbx 00008004241f2000 rcx 691060bf082d7331 rdx 0000000000000000
+rsp 000000004747fed0 rbp 000000004747fee0 rsi 000000000060569a rdi 00000000006055a8
+rip 00000000004001b0 r8 0000000000000000  r9 0000000000000000 r10 0000000000000000
+r11 0000000000000212 r12 0000800400002800 r13 0000000000000200 r14 00008004241ee000
+r15 00008004227b1000 rflags 00000206
+es: 001b ds: 001b cs: 0023 ss: 001b
+(multi-oom) crashed child should return -1.: FAILED
+child_5_O: exit(1)
+child_4_O: exit(1)
+child_3_O: exit(1)
+child_2_O: exit(1)
+child_1_O: exit(1)
+child_0_O: exit(1)
 (multi-oom) Spawned at least 10 children.
 (multi-oom) Spawned at least 10 children.: FAILED
 multi-oom: exit(1)
 Execution of 'multi-oom' complete.
-Timer: 603 ticks
-Thread: 32 idle ticks, 571 kernel ticks, 0 user ticks
+Timer: 119 ticks
+Thread: 48 idle ticks, 50 kernel ticks, 21 user ticks
 hd0:0: 0 reads, 0 writes
-hd0:1: 83 reads, 242 writes
+hd0:1: 1110 reads, 242 writes
 hd1:0: 107 reads, 0 writes
-Console: 918 characters output
+Console: 1727 characters output
 Keyboard: 0 keys pressed
-Exception: 0 page faults
+Exception: 1 page faults
 Powering off...

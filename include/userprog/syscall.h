@@ -2,6 +2,7 @@
 #define USERPROG_SYSCALL_H
 #include <stdio.h>
 #include "threads/synch.h"
+#include "threads/interrupt.h"
 
 struct lock syscall_lock;
 
@@ -10,9 +11,9 @@ void check_address (void *addr);
 
 void halt (void);
 void exit (int status);
-// int fork (const char *thread_name);
-// int exec (const char *cmd_line);
-// int wait (int pid);
+int fork (const char *thread_name, struct intr_frame *f);
+int exec (const char *cmd_line);
+int wait (int pid);
 bool create (const char *file, unsigned initial_size);
 bool remove (const char *file);
 int open (const char *file);

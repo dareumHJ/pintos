@@ -8,7 +8,11 @@
 #include "threads/flags.h"
 #include "intrinsic.h"
 #include "filesys/file.h"
+#include "filesys/filesys.h"
 #include "threads/synch.h"
+#include "devices/input.h"
+#include "userprog/process.h"
+#include "threads/palloc.h"
 
 void syscall_entry (void);
 void syscall_handler (struct intr_frame *);
@@ -93,15 +97,15 @@ syscall_handler (struct intr_frame *f UNUSED) {
 	 	case SYS_EXIT:
 	 		exit(f->R.rdi);
 	 		break;
-	// 	case SYS_FORK:
-	// 		(f->R.rax) = fork(f->R.rdi);
-	// 		break;
-	// 	case SYS_EXEC:
-	// 		(f->R.rax) = exec(f->R.rdi);
-	// 		break;
-	// 	case SYS_WAIT:
-	// 		(f->R.rax) = wait(f->R.rdi);
-	// 		break;
+	 	case SYS_FORK:
+	 		(f->R.rax) = fork(f->R.rdi, f);
+	 		break;
+	 	case SYS_EXEC:
+	 		(f->R.rax) = exec(f->R.rdi);
+	 		break;
+	 	case SYS_WAIT:
+	 		(f->R.rax) = wait(f->R.rdi);
+	 		break;
 	 	case SYS_CREATE:
 	 		(f->R.rax) = create(f->R.rdi, f->R.rsi);
 	 		break;
@@ -143,19 +147,40 @@ void exit (int status){
 	thread_exit();
 }
 
-// pid_t fork (const char *thread_name){
+int fork (const char *thread_name, struct intr_frame *f){
+	check_address(thread_name);
+
+	struct thread *curr = thread_current();
+
+	/* curr의 tf는 kernel stack에 대한 rsp를 가지고 있음, 때문에 새로운 intr_frame을 만들어 줘야 함 */
+	return process_fork(thread_name, f);
+}
+
+int exec (const char *cmd_line){
+	check_address(cmd_line);
+	//이따가 cmd_line을 parsing해야 하는데 argument로 들어온 cmd_line은 cont이므로 복사해줌
+	char *copy = palloc_get_page(PAL_ZERO);
+	if(copy == NULL){
+		exit(-1);
+	}
+
+	strlcpy(copy, cmd_line, PGSIZE);		//copy의 사이즈가 pgsize만큼일테니까
+
+	if(process_exec(copy) == -1){
+		exit(-1);
+	}
+
 	
-// }
+}
 
-// int exec (const char *cmd_line){
-// }
-
-// int wait (pid_t pid){
-// }
+int wait (int pid){
+	return(process_wait(pid));
+}
 
 bool create (const char *file, unsigned initial_size){
 	check_address(file);							//check validity of pointer
-	return filesys_create(file, initial_size);
+	bool a = filesys_create(file, initial_size);
+	return a;
 }
 bool remove (const char *file){
 	check_address(file);							//check validity of pointer
@@ -276,7 +301,7 @@ unsigned tell (int fd){
 	if(open_file == NULL){
 		return;
 	}
-	return file_tell(fd);
+	return file_tell(open_file);
 }
 
 void close (int fd){

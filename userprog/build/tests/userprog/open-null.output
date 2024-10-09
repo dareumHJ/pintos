@@ -15,12 +15,12 @@ Executing 'open-null':
 (open-null) begin
 open-null: exit(-1)
 Execution of 'open-null' complete.
-Timer: 614 ticks
-Thread: 33 idle ticks, 581 kernel ticks, 0 user ticks
+Timer: 81 ticks
+Thread: 31 idle ticks, 48 kernel ticks, 2 user ticks
 hd0:0: 0 reads, 0 writes
 hd0:1: 80 reads, 232 writes
 hd1:0: 102 reads, 0 writes
-Console: 827 characters output
+Console: 825 characters output
 Keyboard: 0 keys pressed
 Exception: 0 page faults
 Powering off...
