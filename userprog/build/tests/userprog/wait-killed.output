@@ -16,16 +16,17 @@ Executing 'wait-killed':
 (wait-killed) begin
 (child-bad) begin
 load: pintos: open failed
-(wait-killed) wait(exec()) = 0
+child-bad: exit(-1)
+(wait-killed) wait(exec()) = -1
 (wait-killed) end
 wait-killed: exit(0)
 Execution of 'wait-killed' complete.
-Timer: 93 ticks
-Thread: 39 idle ticks, 51 kernel ticks, 3 user ticks
+Timer: 89 ticks
+Thread: 35 idle ticks, 51 kernel ticks, 3 user ticks
 hd0:0: 0 reads, 0 writes
 hd0:1: 171 reads, 448 writes
 hd1:0: 205 reads, 0 writes
-Console: 991 characters output
+Console: 1012 characters output
 Keyboard: 0 keys pressed
 Exception: 0 page faults
 Powering off...

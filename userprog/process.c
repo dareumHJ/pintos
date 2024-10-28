@@ -52,12 +52,13 @@ process_create_initd (const char *file_name) {
 		return TID_ERROR;
 	strlcpy (fn_copy, file_name, PGSIZE);
 
+	// file name만 잘라서 넘겨주기...
 	char *save_ptr;
 	strtok_r(file_name, " ", &save_ptr);
 	/* Create a new thread to execute FILE_NAME. */
 	/* process_fork랑 같은 방식으로 만들어진 스레드를 현재 스레드의 자식 스레드로 기록해야 함 */
 	struct semaphore initd_sema;
-	void *args[3] = {(void*) thread_current(), (void*) fn_copy, (void*) &initd_sema};
+	void *args[3] = {(void *) thread_current(), (void *) fn_copy, (void *) &initd_sema};
 	sema_init(&initd_sema, 0);
 	tid = thread_create (file_name, PRI_DEFAULT, initd, args);
 	sema_down(&initd_sema);
@@ -94,14 +95,16 @@ initd (void *aux) {
 tid_t
 process_fork (const char *name, struct intr_frame *if_ UNUSED) {
 	/* Clone current thread to new thread.*/
-	struct thread *curr = thread_current();
+	struct thread *cur_t = thread_current();
 	struct semaphore fork_sema;
+
 	sema_init(&fork_sema, 0);
-	void *args[3] = {(void*)curr,(void*)if_,(void*)(&fork_sema)};
+
+	void *args[3] = {(void *)cur_t, (void *)if_, (void *)(&fork_sema)};
+
 	tid_t temp = thread_create (name, PRI_DEFAULT, __do_fork, args);
-	if (temp == TID_ERROR){
-		return TID_ERROR;
-	}
+
+	if (temp == TID_ERROR) return TID_ERROR;
 	/* 부모의 정보를 다 복사할 때 까지 return 하면 안 된다고 함 */
 	sema_down(&fork_sema);
 
@@ -120,16 +123,14 @@ duplicate_pte (uint64_t *pte, void *va, void *aux) {
 	bool writable;
 
 	/* 1. TODO: If the parent_page is kernel page, then return immediately. */
-	if (is_kern_pte(pte)){
-		return true;
-	}
+	if (is_kern_pte(pte)) return true;			// defined at threads/mmu.h
 
 	/* 2. Resolve VA from the parent's page map level 4. */
-	parent_page = pml4_get_page (parent->pml4, va);
+	parent_page = pml4_get_page(parent->pml4, va);
 
 	/* 3. TODO: Allocate new PAL_USER page for the child and set result to
 	 *    TODO: NEWPAGE. */
-	newpage = palloc_get_page(PAL_ZERO | PAL_USER);
+	newpage = palloc_get_page(PAL_USER);
 
 	/* 4. TODO: Duplicate parent's page to the new page and
 	 *    TODO: check whether parent's page is writable or not (set WRITABLE
@@ -155,12 +156,12 @@ duplicate_pte (uint64_t *pte, void *va, void *aux) {
 static void
 __do_fork (void *aux) {
 	struct intr_frame if_;
-	void **args = (void**)aux;
-	struct thread *parent = (struct thread *) args[0];
-	struct thread *current = thread_current ();
+	void **args = (void **)aux;			// 3 arguments for __do_fork
+	struct thread *parent = (struct thread *) args[0];			// thread from process_fork() (i.e. the forking thread)
+	struct thread *current = thread_current ();				// child thread
 	/* TODO: somehow pass the parent_if. (i.e. process_fork()'s if_) */
 	struct intr_frame *parent_if = (struct intr_frame *) args[1];
-	struct semaphore *fork_sema = (struct semaphore *) args[2];
+	struct semaphore *fork_sema = (struct semaphore *) args[2];			// Needed for sema_up
 	bool succ = true;
 
 	/* 1. Read the cpu context to local stack. */
@@ -186,30 +187,29 @@ __do_fork (void *aux) {
 	 * TODO:       in include/filesys/file.h. Note that parent should not return
 	 * TODO:       from the fork() until this function successfully duplicates
 	 * TODO:       the resources of parent.*/
-	if(parent -> fd_index >= FD_LIMIT){
-		goto error;
-	}
 
-	for (int i = 2; i< FD_LIMIT; i++){
-		struct file *temp = parent -> fd_array[i];
-		if (temp != NULL){
-			current -> fd_array[i] = file_duplicate(temp);
+	// duplicate file objects
+	for (int i = 2; i < FD_LIMIT; i++){
+		struct file *f = (parent -> fd_array)[i];
+		if (f != NULL) {
+			(current -> fd_array)[i] = file_duplicate(f);
 		}
 	}
 
 	process_init ();
 
-	if_.R.rax = 0;
+	if_.R.rax = 0;			// return value from the child process should be 0
 	sema_up(fork_sema);
 
 	/* Finally, switch to the newly created process. */
 	if (succ){
-		list_push_back(&parent->childs_list, &current -> child_elem);
-		current -> parent_thread = parent;
+		// update "child process lists" of the parent process
+		list_push_back(&(parent -> childs_list), &(current -> child_elem));
+		(current -> parent_thread) = parent;
 		do_iret (&if_);
 	}
 error:
-	sema_up(fork_sema);
+	sema_up(fork_sema);			// even if an error occurs, the FORKING LOCK should be released
 	thread_exit ();
 }
 
@@ -241,7 +241,6 @@ process_exec (void *f_name) {
 	palloc_free_page (file_name);
 	// 임시로 memory allocate된 file_name을 free해준다. (load에서 할당되었음)
 	if (!success){
-		thread_exit();
 		return -1;
 	}
 
@@ -304,6 +303,8 @@ process_exit (void) {
 	for(int i = 0; i<FD_LIMIT; i++){
 		curr->fd_array[i] = NULL;
 	}
+	// ADD: close executing file
+	file_close(curr -> executing_file);
 
 	palloc_free_page((void*)curr->fd_array);
 	process_cleanup ();
@@ -547,6 +548,10 @@ load (const char *file_name, struct intr_frame *if_) {
 		}
 	}
 
+	/* ADD: Deny write on executables */
+	t -> executing_file = file;
+	file_deny_write(file);
+
 	/* Set up stack. */
 	if (!setup_stack (if_))
 		goto done;
@@ -567,7 +572,8 @@ load (const char *file_name, struct intr_frame *if_) {
 
 done:
 	/* We arrive here whether the load is successful or not. */
-	file_close (file);
+	/* Modified(from file_close()): keep opening the executing file */
+	/* file(executing) will be closed in process_exit() */
 	return success;
 }
 

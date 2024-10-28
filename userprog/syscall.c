@@ -7,12 +7,12 @@
 #include "userprog/gdt.h"
 #include "threads/flags.h"
 #include "intrinsic.h"
-#include "filesys/file.h"
-#include "filesys/filesys.h"
-#include "threads/synch.h"
-#include "devices/input.h"
-#include "userprog/process.h"
-#include "threads/palloc.h"
+#include "filesys/file.h" // include +
+#include "filesys/filesys.h" // include +
+#include "threads/synch.h" // include +
+#include "devices/input.h" // include +
+#include "userprog/process.h" // include +
+#include "threads/palloc.h" // include +
 
 void syscall_entry (void);
 void syscall_handler (struct intr_frame *);
@@ -33,41 +33,34 @@ void syscall_handler (struct intr_frame *);
 // To implement syscalls, virtual address space에서 data를 읽고 쓸 방법을 구현해야 함....
 // System call의 인자로 들어온 pointer로부터 data를 읽어야 할 때 필요. (그래서 여기서 구현)
 void check_address(void *addr){
-	if(addr == NULL || is_kernel_vaddr(addr) || pml4_get_page(thread_current()->pml4, addr) == NULL)
+	if (addr == NULL || is_kernel_vaddr(addr) || pml4_get_page(thread_current() -> pml4, addr) == NULL)
 		exit(-1);
 }
 
+// ADD: To allocate fd(file descriptor) from the current thread's fd table
 int allocate_fd(struct file *file){
 	/* 현재 스레드에서 관리하는 fd table을 통해 fd를 배정해줘야 함
 	   스레드의 fd_index 값부터 시작해서 가능한 fd를 탐색
 	   array에서 NULL인 자리를 만날 때까지 fd++
 	   만약 fd의 최대값을 넘어간다면 바로 -1 return
 	   thread의 fd 관련 변수들을 최신화 해주고 fd return*/
-	struct thread *cur = thread_current();
-	int fd = cur -> fd_index;
+	struct thread *cur_t = thread_current();
+	int fd;
 
-	while(cur -> fd_array[fd] != NULL){
-		if (fd >= FD_LIMIT)
-			return -1;
-		fd++;
+	// FD_LIMIT is define at threads/thread.h
+	for(fd = (cur_t -> fd_index); (cur_t -> fd_array[fd] != NULL); fd++){
+		if (fd >= FD_LIMIT) return -1;
 	}
 
-	cur -> fd_index = fd;
-	cur -> fd_array[fd] = file;
+	cur_t -> fd_index = fd;
+	cur_t -> fd_array[fd] = file;
 	return fd;
 }
 
+// To find the file having this specific fd(file descriptor) for the current thread.
 struct file *find_file(int fd){
-	if(fd<2){
-		return NULL;
-	}
-	if (fd>=FD_LIMIT){
-		return NULL;
-	}
-
-	struct thread *cur = thread_current();
-	struct file *cur_file = cur -> fd_array[fd];
-	return cur_file;
+	if(fd < 2 || fd >= FD_LIMIT) return NULL; // 0 for STDIN, 1 for STDOUT, AND fd should be less than the LIMIT
+	return (thread_current() -> fd_array[fd]);
 }
 
 void
@@ -82,7 +75,7 @@ syscall_init (void) {
 	write_msr(MSR_SYSCALL_MASK,
 			FLAG_IF | FLAG_TF | FLAG_DF | FLAG_IOPL | FLAG_AC | FLAG_NT);
 
-	lock_init(&syscall_lock);
+	lock_init(&syscall_lock); // We need a lock to read or write a file in mutual-exclusive manner
 }
 
 /* The main system call interface */
@@ -135,11 +128,11 @@ syscall_handler (struct intr_frame *f UNUSED) {
 	}
 }
 
-void halt (void){
+void halt (void){		/* DONE */
  	power_off();
 }
 
-void exit (int status){
+void exit (int status){			/* DONE */
 	/* Should implement code about returning state */
 	printf ("%s: exit(%d)\n", thread_name(), status);
 
@@ -147,78 +140,63 @@ void exit (int status){
 	thread_exit();
 }
 
-int fork (const char *thread_name, struct intr_frame *f){
+int fork (const char *thread_name, struct intr_frame *f){			/* DONE? */
 	check_address(thread_name);
 
-	struct thread *curr = thread_current();
-
-	/* curr의 tf는 kernel stack에 대한 rsp를 가지고 있음, 때문에 새로운 intr_frame을 만들어 줘야 함 */
+	/* current의 tf는 kernel stack에 대한 rsp를 가지고 있음... */
+	// additional comments: so, we should use the interrupt frame from the system call
 	return process_fork(thread_name, f);
 }
 
 int exec (const char *cmd_line){
 	check_address(cmd_line);
-	//이따가 cmd_line을 parsing해야 하는데 argument로 들어온 cmd_line은 cont이므로 복사해줌
+	//이따가 cmd_line을 parsing해야 하는데 argument로 들어온 cmd_line은 const이므로 복사해줌
 	char *copy = palloc_get_page(PAL_ZERO);
-	if(copy == NULL){
-		exit(-1);
-	}
-
 	strlcpy(copy, cmd_line, PGSIZE);		//copy의 사이즈가 pgsize만큼일테니까
 
-	if(process_exec(copy) == -1){
-		exit(-1);
-	}
-
-	
+	if(process_exec(copy) == -1) exit(-1);
 }
 
 int wait (int pid){
 	return(process_wait(pid));
 }
 
-bool create (const char *file, unsigned initial_size){
-	check_address(file);							//check validity of pointer
-	bool a = filesys_create(file, initial_size);
-	return a;
+bool create (const char *file, unsigned initial_size){		/* DONE */
+	check_address(file);
+	return filesys_create(file, initial_size);
 }
-bool remove (const char *file){
-	check_address(file);							//check validity of pointer
+bool remove (const char *file){		/* DONE */
+	check_address(file);
 	return filesys_remove(file);
 }
 
-int open (const char *file){
+int open (const char *file){		/* DONE */
 	/* filesys_open으로 파일을 우선 open
 	   만약 열린 파일이 NULL이라면 제대로 열리지 않은 것이므로 fd -1 return
 	   allocate_fd를 통해 fd를 배정해줌
 	   만약 fd가 -1이 배정되었다면 뭔가 문제가 생긴 것이므로 파일을 닫고 -1 return
 	   이제 배정받은 fd를 return 해주면 끝! */
 	check_address(file);
+
+	// Check whether open file IS NOT NULL
 	struct file *open_file = filesys_open(file);
+	if (open_file == NULL) return -1;
 
-	if (open_file == NULL){
-		return -1;
-	}
-
+	// Check whether file descriptor IS NOT -1 (NO remaining space in fd_table)
 	int fd = allocate_fd(open_file);
-
-	if(fd == -1){
-		file_close(open_file);
-	}
+	if(fd == -1) file_close(open_file);
 
 	return fd;
 }
 
-int filesize (int fd){
-	struct file *open_file = find_file(fd);			//fd값에 해당하는 file을 찾음
-	if(open_file == NULL){							//찾은 게 만약 NULL이라면 뭔가 문제가 있으므로 -1 return
-		return -1;
-	}
+int filesize (int fd){		/* DONE */
+	struct file *open_file = find_file(fd);
+	if(open_file == NULL) return -1;
 
-	return file_length(open_file);					//file_length를 이용해 길이를 return
+	return file_length(open_file);
 }
 
-int read (int fd, void *buffer, unsigned size){
+int read (int fd, void *buffer, unsigned size){		/* DONE */
 	/* fd = 0 -> stdin
 	   fd = 1 -> stdout, not read! -> return -1
 	   그 외 -> size만큼 읽어서 buffer에 넣어줌
@@ -226,28 +204,22 @@ int read (int fd, void *buffer, unsigned size){
 	   읽는 동안 다른 놈들이 건들면 안 됨
 	   lock을 걸어줘야 한다*/
 
+	// Check the validity for the beginning of the buffer and the end of the buffer
 	check_address(buffer);
-	check_address(buffer + size - 1);				//buffer 및 buffer 끝 address 확인
+	check_address(buffer + size - 1);
 
-	char *buf = (char *)buffer;
-	int count;
 	struct file *open_file = find_file(fd);
+	int count;
 
-	if(fd == 0){									//stdin, use input_getc in devices/input.c
-		char input;
-		for(int count = 0; count < size; count++){
-			input = input_getc();					//input에 
-			*buf = input;
-			buf++;
-			if (input == '\n'){
-				break;
-			}
+	if (fd == 0) {		// In case of STDIN, use input_getc in devices/input.c
+		for(count = 0; count < size; count++){
+			*(char *)buffer = input_getc();
+			buffer++;
+			// if (input == '\n') break;		// I think this line is not needed......
 		}
 	}
 
-	else if (open_file == NULL){					//fd가 1인 경우는 open_file이 널인 경우를 포함
-		return -1;
-	}
+	else if (open_file == NULL) return -1;		// In case of the fd is not valid
 
 	else{
 		lock_acquire(&syscall_lock);
@@ -257,29 +229,28 @@ int read (int fd, void *buffer, unsigned size){
 
 	return count;
 }
-int write (int fd, const void *buffer, unsigned size){
+int write (int fd, const void *buffer, unsigned size){		/* DONE */
 	/* stdout인 경우, 그냥 buffer 값을 출력하면 됨
 	   stdin인 경우, write랑 상관 x, -1 return
 	   그 외 -> size만큼 읽어주기
 	   
 	   이번에도 읽는 동안은 lock을 걸어서 읽는 내용에 변화가 없게 해줘야 함*/
 
+	// Check the validity for the beginning of the buffer and the end of the buffer
 	check_address(buffer);
 	check_address(buffer + size - 1);
 
-	int count;
 	struct file *open_file = find_file(fd);
+	int count;
 
-	if (fd == 1){
-		putbuf(buffer, size);				//use putbuf() in lib/kernel/console.c
+	if (fd == 1) {
+		putbuf(buffer, size);				// In case of STDOUT, use putbuf() in lib/kernel/console.c
 		count = size;
 	}
 	
-	else if (open_file == NULL){			//fd가 0인 경우는 open_file이 널인 경우를 포함
-		return -1;
-	}
+	else if (open_file == NULL) return -1;	// In case of the fd is not valid
 
-	else{
+	else {
 		lock_acquire(&syscall_lock);
 		count = file_write(open_file, buffer, size);
 		lock_release(&syscall_lock);
@@ -288,29 +259,25 @@ int write (int fd, const void *buffer, unsigned size){
 	return count;
 }
 
-void seek (int fd, unsigned position){
+void seek (int fd, unsigned position){		/* DONE */
 	struct file *open_file = find_file(fd);
-	if(open_file == NULL){
-		return;
-	}
+	if (open_file == NULL) return;
 	file_seek(open_file, position);
 }
 
-unsigned tell (int fd){
+unsigned tell (int fd){			/* DONE */
 	struct file *open_file = find_file(fd);
-	if(open_file == NULL){
-		return;
-	}
+	if (open_file == NULL) return;
 	return file_tell(open_file);
 }
 
-void close (int fd){
-	struct thread *cur = thread_current();
-
+void close (int fd){		/* DONE */
 	struct file *open_file = find_file(fd);
-	if (open_file == NULL)
-		return;
+	struct thread *cur_t = thread_current();
 
-	cur -> fd_array[fd] = NULL;
-	cur -> fd_index = fd;
+	if (open_file == NULL) return;
+
+	// Free file descriptor... and set fd_index to fd for optimization of searching
+	cur_t -> fd_array[fd] = NULL;
+	cur_t -> fd_index = fd;
 }

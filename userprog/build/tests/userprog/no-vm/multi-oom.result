@@ -1,2 +1,2 @@
 FAIL
-run: crashed child should return -1.: FAILED
+run: Should return > 0.: FAILED

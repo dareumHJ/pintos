@@ -1,7 +1,7 @@
 #ifndef THREADS_THREAD_H
 #define THREADS_THREAD_H
 
-#define FD_LIMIT 1<<9		// page is 1<<12 byte and one address is 1<<3 byte
+#define FD_LIMIT (1 << 9)		// page is 1 << 12 byte and one address is 1 << 3 byte
 
 #include <debug.h>
 #include <list.h>
@@ -114,8 +114,9 @@ struct thread {
 	uint64_t *pml4;                     /* Page map level 4 */
 	/* Variables for system call */
 	struct file **fd_array;		//file table
-	int fd_index;				//마지막으로 배정 or free 된 fd 값
+	int fd_index;				//마지막으로 allocate or free 된 fd index
 	int exit_code;				//exit code
+	struct file *executing_file;
 
 	/* Variables for fork, wait */
 	struct list childs_list;
