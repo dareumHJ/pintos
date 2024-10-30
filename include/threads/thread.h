@@ -1,7 +1,7 @@
 #ifndef THREADS_THREAD_H
 #define THREADS_THREAD_H
 
-#define FD_LIMIT (1 << 9)		// page is 1 << 12 byte and one address is 1 << 3 byte
+#define FD_LIMIT 3 * (1 << 9)
 
 #include <debug.h>
 #include <list.h>

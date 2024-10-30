@@ -98,17 +98,19 @@ process_fork (const char *name, struct intr_frame *if_ UNUSED) {
 	struct thread *cur_t = thread_current();
 	struct semaphore fork_sema;
 
+	if ((cur_t -> fd_index) == FD_LIMIT) return -1;
+
 	sema_init(&fork_sema, 0);
 
 	void *args[3] = {(void *)cur_t, (void *)if_, (void *)(&fork_sema)};
 
-	tid_t temp = thread_create (name, PRI_DEFAULT, __do_fork, args);
+	tid_t new_tid = thread_create (name, PRI_DEFAULT, __do_fork, args);
 
-	if (temp == TID_ERROR) return TID_ERROR;
+	if (new_tid == TID_ERROR) return TID_ERROR;
 	/* 부모의 정보를 다 복사할 때 까지 return 하면 안 된다고 함 */
 	sema_down(&fork_sema);
 
-	return temp;
+	return new_tid;
 }
 
 #ifndef VM
@@ -144,6 +146,7 @@ duplicate_pte (uint64_t *pte, void *va, void *aux) {
 	if (!pml4_set_page (current->pml4, va, newpage, writable)) {
 		/* 6. TODO: if fail to insert page, do error handling. */
 		palloc_free_page(newpage);
+		return false;
 	}
 	return true;
 }
@@ -186,8 +189,8 @@ __do_fork (void *aux) {
 	 * TODO: Hint) To duplicate the file object, use `file_duplicate`
 	 * TODO:       in include/filesys/file.h. Note that parent should not return
 	 * TODO:       from the fork() until this function successfully duplicates
-	 * TODO:       the resources of parent.*/
-
+	 * TODO:       the resources of parent.*/	
+	
 	// duplicate file objects
 	for (int i = 2; i < FD_LIMIT; i++){
 		struct file *f = (parent -> fd_array)[i];
@@ -196,10 +199,10 @@ __do_fork (void *aux) {
 		}
 	}
 
-	process_init ();
-
 	if_.R.rax = 0;			// return value from the child process should be 0
-	sema_up(fork_sema);
+	sema_up(fork_sema);		// release fork lock
+
+	process_init ();
 
 	/* Finally, switch to the newly created process. */
 	if (succ){
@@ -210,7 +213,8 @@ __do_fork (void *aux) {
 	}
 error:
 	sema_up(fork_sema);			// even if an error occurs, the FORKING LOCK should be released
-	thread_exit ();
+	// thread_exit ();
+	exit(TID_ERROR);
 }
 
 /* Switch the current execution context to the f_name.
@@ -260,17 +264,16 @@ process_exec (void *f_name) {
  * This function will be implemented in problem 2-2.  For now, it
  * does nothing. */
 
-/* find chidls  with tid */
-struct thread *search_child(tid_t id){
-	struct list childs_list = thread_current() -> childs_list;
+/* find childs with tid */
+struct thread *search_child (tid_t target_tid) {
+	struct list childs_list = (thread_current() -> childs_list);
 	for (struct list_elem *e = list_begin(&childs_list); e -> next != NULL; e = list_next(e)){
 		struct thread *temp = list_entry(e, struct thread, child_elem);
-		if (temp -> tid == id){
+		if ((temp -> tid) == target_tid){
 			return temp;
 		}
 	}
 	return NULL;
-	
 }
 
 int
@@ -279,14 +282,16 @@ process_wait (tid_t child_tid UNUSED) {
 	 * XXX:       to add infinite loop here before
 	 * XXX:       implementing the process_wait. */
 	struct thread *child = search_child(child_tid);
-	if (child ==NULL){
-		return -1;
-	}
-	sema_down(&child->wait_sema);
-	list_remove(&child->child_elem);
-	int r = child -> exit_code;
-	sema_up(&child->exit_sema);
-	return r;
+	if (child == NULL) return -1;		// there is no child with child_tid
+	
+	// wait until the child process send signal whether it can be terminated(sema_up from child)
+	sema_down(&(child -> wait_sema));
+	// when the child process is terminated ... remove it from the childs_list
+	list_remove(&(child -> child_elem));
+	// .. and finally the child is terminated
+	int child_exit_code = (child -> exit_code);
+	sema_up(&(child -> exit_sema));
+	return child_exit_code;
 }
 
 /* Exit the process. This function is called by thread_exit (). */
@@ -299,19 +304,21 @@ process_exit (void) {
 	 * TODO: We recommend you to implement process resource cleanup here. */
 
 
-	// open 상태의 파일들 전부 다 닫기 == fd_array 전부 초기화
-	for(int i = 0; i<FD_LIMIT; i++){
-		curr->fd_array[i] = NULL;
+	// open 상태의 파일들 전부 다 닫기
+	for(int i = 2; i < FD_LIMIT; i++){
+		close(i);
 	}
 	// ADD: close executing file
 	file_close(curr -> executing_file);
 
-	palloc_free_page((void*)curr->fd_array);
-	process_cleanup ();
+	palloc_free_multiple(curr -> fd_array, 3);
 
+	// let parent process know that this process is terminated
 	sema_up(&curr -> wait_sema);
-
+	// when the parent send signal that it can be terminated, then terminate.
 	sema_down(&curr -> exit_sema);
+	// then do schedule at thread_exit
+	process_cleanup ();
 }
 
 /* Free the current process's resources. */

@@ -49,7 +49,10 @@ int allocate_fd(struct file *file){
 
 	// FD_LIMIT is define at threads/thread.h
 	for(fd = (cur_t -> fd_index); (cur_t -> fd_array[fd] != NULL); fd++){
-		if (fd >= FD_LIMIT) return -1;
+		if (fd >= FD_LIMIT){
+			cur_t -> fd_index = FD_LIMIT;
+			return -1;
+		}
 	}
 
 	cur_t -> fd_index = fd;
@@ -148,7 +151,7 @@ int fork (const char *thread_name, struct intr_frame *f){			/* DONE? */
 	return process_fork(thread_name, f);
 }
 
-int exec (const char *cmd_line){
+int exec (const char *cmd_line){			/* DONE */
 	check_address(cmd_line);
 	//이따가 cmd_line을 parsing해야 하는데 argument로 들어온 cmd_line은 const이므로 복사해줌
 	char *copy = palloc_get_page(PAL_ZERO);
@@ -158,7 +161,7 @@ int exec (const char *cmd_line){
 }
 
 int wait (int pid){
-	return(process_wait(pid));
+	return process_wait(pid);
 }
 
 bool create (const char *file, unsigned initial_size){		/* DONE */

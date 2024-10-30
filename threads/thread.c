@@ -280,9 +280,8 @@ thread_create (const char *name, int priority,
 // ADD: to allocate file table (for PROJECT 2)
 #ifdef USERPROG
 	// allocate page for fd_array
-	t -> fd_array = (struct file **)palloc_get_page(PAL_ZERO);
+	t -> fd_array = (struct file **)palloc_get_multiple(PAL_ZERO, 3);
 	if((t -> fd_array) == NULL){
-		palloc_free_page(t);
 		return TID_ERROR;
 	}
 
@@ -654,7 +653,7 @@ init_thread (struct thread *t, const char *name, int priority) {
 	// Additional initialization for the implementation for fork, wait
 	t -> parent_thread = NULL;
 	list_init(&(t -> childs_list));
-	sema_init(&(t -> wait_sema), 0);	//부모가 먼저 기다리기 위해서 sema_down을 할 것이기 때문에 0으로 초기화
+	sema_init(&(t -> wait_sema), 0);	// 부모가 먼저 기다리기 위해서 sema_down을 할 것이기 때문에 0으로 초기화
 	sema_init(&(t -> exit_sema), 0);
 #endif
 }
