@@ -738,6 +738,16 @@ lazy_load_segment (struct page *page, void *aux) {
 	/* TODO: Load the segment from the file */
 	/* TODO: This called when the first page fault occurs on address VA. */
 	/* TODO: VA is available when calling this function. */
+	void **args = (void **) aux;
+	size_t read_bytes = (size_t) args[0];
+	size_t zero_bytes = (size_t) args[1];
+	struct file *file = (struct file*) args[2];
+	off_t ofs = (off_t) args[3];
+
+	file_seek(file, ofs);
+	file_read(file, (page -> frame -> kva), read_bytes);
+	memset(((page -> frame -> kva) + read_bytes), 0, zero_bytes);
+	return true;
 }
 
 /* Loads a segment starting at offset OFS in FILE at address
@@ -769,9 +779,9 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 		size_t page_zero_bytes = PGSIZE - page_read_bytes;
 
 		/* TODO: Set up aux to pass information to the lazy_load_segment. */
-		void *aux = NULL;
+		void *args[4] = {(void *)(page_read_bytes), (void *)(page_zero_bytes), (void *)file, (void *)ofs};
 		if (!vm_alloc_page_with_initializer (VM_ANON, upage,
-					writable, lazy_load_segment, aux))
+					writable, lazy_load_segment, args))
 			return false;
 
 		/* Advance. */
@@ -792,6 +802,11 @@ setup_stack (struct intr_frame *if_) {
 	 * TODO: If success, set the rsp accordingly.
 	 * TODO: You should mark the page is stack. */
 	/* TODO: Your code goes here */
+	/*vm_alloc_page는 vm_alloc_page_with_initializer(type, upage, writable, NULL, NULL)로 vm.h에 define 되어있음*/
+	if (vm_alloc_page(VM_ANON | VM_MARKER_STACK, stack_bottom, true) && vm_claim_page(stack_bottom)){
+		if_ -> rsp = USER_STACK;
+		success = true;
+	}
 
 	return success;
 }
