@@ -33,8 +33,9 @@ void syscall_handler (struct intr_frame *);
 // To implement syscalls, virtual address space에서 data를 읽고 쓸 방법을 구현해야 함....
 // System call의 인자로 들어온 pointer로부터 data를 읽어야 할 때 필요. (그래서 여기서 구현)
 void check_address(void *addr){
-	if (addr == NULL || is_kernel_vaddr(addr) || pml4_get_page(thread_current() -> pml4, addr) == NULL)
-		exit(-1);
+	// if (addr == NULL || is_kernel_vaddr(addr) || pml4_get_page(thread_current() -> pml4, addr) == NULL)
+	if (addr == NULL) exit(-1);
+	if (is_kernel_vaddr(addr)) exit(-1);
 }
 
 // ADD: To allocate fd(file descriptor) from the current thread's fd table

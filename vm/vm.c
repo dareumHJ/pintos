@@ -43,6 +43,7 @@ page_get_type (struct page *page) {
 static struct frame *vm_get_victim (void);
 static bool vm_do_claim_page (struct page *page);
 static struct frame *vm_evict_frame (void);
+hash_action_func *page_destructor(struct hash_elem *e, void *aux);
 
 /* Create the pending page object with initializer. If you want to create a
  * page, do not create it directly and make it through this function or
@@ -51,7 +52,7 @@ bool
 vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writable,
 		vm_initializer *init, void *aux) {
 
-	ASSERT (VM_TYPE(type) != VM_UNINIT)
+	// ASSERT (VM_TYPE(type) != VM_UNINIT)
 
 	struct supplemental_page_table *spt = &thread_current ()->spt;
 
@@ -179,16 +180,16 @@ vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
 	/* TODO: Validate the fault */
 	/* TODO: Your code goes here */
 	/* lazy load가 아닌 상황을 생각해보면
-	1. not present가 false인 경우 
+	1. not present가 false인 경우 (= memory의 physical page가 존재하는 경우)
 	2. write는 1인데 실제 페이지의 writable은 0인 경우
 	3. addr이 커널 주소를 가리킬 때?*/
 	if (addr == NULL) return false;
-	if (!not_present) return false;
 	if (is_kernel_vaddr(addr)) return false;
+	if (!not_present) return false;
+	
 	
 	page = spt_find_page(spt, addr);
 	if ((page == NULL) || (write && !(page -> writable))) return false;
-
 	return vm_do_claim_page (page);
 }
 
@@ -249,6 +250,29 @@ supplemental_page_table_init (struct supplemental_page_table *spt UNUSED) {
 bool
 supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 		struct supplemental_page_table *src UNUSED) {
+	struct hash_iterator i;
+	hash_first(&i, &(src -> hash_spt));
+	while (hash_next(&i)){
+		struct page *sp = hash_entry(hash_cur(&i), struct page, page_elem);
+		enum vm_type type = (sp -> operations -> type);
+		void *upage = (sp -> va);
+		bool writable = (sp -> writable);
+
+		if(type == VM_UNINIT){	// No need to memcpy
+			vm_initializer *init = (sp -> uninit.init);
+			void *aux = (sp -> uninit.aux);
+			vm_alloc_page_with_initializer(type, upage, writable, init, aux);
+		}
+
+		else if(type == VM_ANON){
+			if (!vm_alloc_page(type, upage, writable)) return false;
+			if (!vm_claim_page(upage)) return false;
+			struct page *dp = spt_find_page (dst, upage);
+			memcpy((dp -> frame -> kva), (sp -> frame -> kva), PGSIZE);
+		}
+	}
+
+	return true;
 }
 
 /* Free the resource hold by the supplemental page table */
@@ -256,6 +280,13 @@ void
 supplemental_page_table_kill (struct supplemental_page_table *spt UNUSED) {
 	/* TODO: Destroy all the supplemental_page_table hold by thread and
 	 * TODO: writeback all the modified contents to the storage. */
+	hash_clear(&(spt -> hash_spt), page_destructor);
+}
+
+/* destructor function for hash_clear */
+hash_action_func *page_destructor(struct hash_elem *e, void *aux) {
+	struct page *p = hash_entry(e, struct page, page_elem);
+	vm_dealloc_page(p);
 }
 
 uint64_t frame_hash_func (const struct hash_elem *e, void *aux UNUSED){

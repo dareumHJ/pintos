@@ -148,10 +148,10 @@ page_fault (struct intr_frame *f) {
 
 	/* Count page faults. */
 	page_fault_cnt++;
+	exit(-1);
 
 	/* If the fault is true fault, show info and exit. */
 	/* Temporarily exit the process with state -1 in PROJECT 2 */
-	exit(-1);
 	// printf ("Page fault at %p: %s error %s page in %s context.\n",
 	// 		fault_addr,
 	// 		not_present ? "not present" : "rights violation",

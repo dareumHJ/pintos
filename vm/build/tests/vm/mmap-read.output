@@ -19,8 +19,8 @@ Executing 'mmap-read':
 (mmap-read) mmap "sample.txt"
 mmap-read: exit(-1)
 Execution of 'mmap-read' complete.
-Timer: 84 ticks
-Thread: 31 idle ticks, 51 kernel ticks, 2 user ticks
+Timer: 81 ticks
+Thread: 33 idle ticks, 44 kernel ticks, 4 user ticks
 hd0:0: 0 reads, 0 writes
 hd0:1: 121 reads, 256 writes
 hd1:0: 109 reads, 0 writes
