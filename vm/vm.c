@@ -63,7 +63,7 @@ vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writable,
 		struct page *page = NULL;
 		page = malloc(sizeof(struct page));
 
-		bool (*initializer)(struct page *, enum vm_type, void *kva);	
+		bool (*initializer)(struct page *, enum vm_type, void *);	
 		switch (VM_TYPE(type)) {
 			case VM_ANON:
 				initializer = anon_initializer;
@@ -92,13 +92,13 @@ spt_find_page (struct supplemental_page_table *spt UNUSED, void *va UNUSED) {
 	struct page *page = NULL;
 	/* TODO: Fill this function. */
 	page = malloc(sizeof(struct page));
-	(page -> va) = va;
-	struct hash *hash_spt = (spt -> hash_spt);
+	(page -> va) = pg_round_down(va);
 
-	struct hash_elem *target_elem = hash_find(hash_spt, &(page -> page_elem));
+	struct hash_elem *target_elem = hash_find(&(spt -> hash_spt), &(page -> page_elem));
 	free(page);
 
-	return hash_entry(target_elem, struct page, page_elem);
+	if (target_elem != NULL) return hash_entry(target_elem, struct page, page_elem);
+	return NULL;
 }
 
 /* Insert PAGE into spt with validation. */
@@ -107,14 +107,14 @@ spt_insert_page (struct supplemental_page_table *spt UNUSED,
 		struct page *page UNUSED) {
 	int succ = false;
 	/* TODO: Fill this function. */
-	struct hash *hash_spt = (spt -> hash_spt);
-	if (hash_insert(hash_spt, &(page -> page_elem))) succ = true;
+	if (hash_insert(&(spt -> hash_spt), &(page -> page_elem)) == NULL) succ = true;
 	
 	return succ;
 }
 
 void
 spt_remove_page (struct supplemental_page_table *spt, struct page *page) {
+	hash_delete(&(spt -> hash_spt), &(page -> page_elem));
 	vm_dealloc_page (page);
 	return true;
 }
@@ -242,10 +242,7 @@ bool less_func (const struct hash_elem *a, const struct hash_elem *b, void *aux 
 
 void
 supplemental_page_table_init (struct supplemental_page_table *spt UNUSED) {
-	struct hash *hash_spt = spt-> hash_spt;
-	if (!hash_init(hash_spt, hash_func, less_func, NULL)) return;
-	
-	(spt -> hash_spt) = hash_spt;
+	hash_init(&(spt -> hash_spt), hash_func, less_func, NULL);
 }
 
 /* Copy supplemental page table from src to dst */

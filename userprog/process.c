@@ -738,15 +738,17 @@ lazy_load_segment (struct page *page, void *aux) {
 	/* TODO: Load the segment from the file */
 	/* TODO: This called when the first page fault occurs on address VA. */
 	/* TODO: VA is available when calling this function. */
-	void **args = (void **) aux;
-	size_t read_bytes = (size_t) args[0];
-	size_t zero_bytes = (size_t) args[1];
-	struct file *file = (struct file*) args[2];
-	off_t ofs = (off_t) args[3];
+	struct lazy_load_args *args = (struct lazy_load_args *)aux;
 
-	file_seek(file, ofs);
-	file_read(file, (page -> frame -> kva), read_bytes);
-	memset(((page -> frame -> kva) + read_bytes), 0, zero_bytes);
+	// void **args = (void **) aux;
+	// size_t read_bytes = (size_t) args[0];
+	// size_t zero_bytes = (size_t) args[1];
+	// struct file *file = (struct file*) args[2];
+	// off_t ofs = (off_t) args[3];
+
+	file_seek(args -> file, args -> ofs);
+	file_read(args -> file, (page -> frame -> kva), args -> read_bytes);
+	memset(((page -> frame -> kva) + (args -> read_bytes)), 0, (args -> zero_bytes));
 	return true;
 }
 
@@ -779,7 +781,12 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 		size_t page_zero_bytes = PGSIZE - page_read_bytes;
 
 		/* TODO: Set up aux to pass information to the lazy_load_segment. */
-		void *args[4] = {(void *)(page_read_bytes), (void *)(page_zero_bytes), (void *)file, (void *)ofs};
+		struct lazy_load_args *args = malloc(sizeof(struct lazy_load_args));
+		args -> file = file;
+		args -> ofs = ofs;
+		args -> read_bytes = page_read_bytes;
+		args -> zero_bytes = page_zero_bytes;
+		// void *args[4] = {(void *)(page_read_bytes), (void *)(page_zero_bytes), (void *)file, (void *)ofs};
 		if (!vm_alloc_page_with_initializer (VM_ANON, upage,
 					writable, lazy_load_segment, args))
 			return false;
@@ -788,6 +795,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 		read_bytes -= page_read_bytes;
 		zero_bytes -= page_zero_bytes;
 		upage += PGSIZE;
+		ofs += page_read_bytes;
 	}
 	return true;
 }

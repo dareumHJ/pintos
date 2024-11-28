@@ -14,4 +14,6 @@ userprog/syscall.o: ../../userprog/syscall.c \
  ../../include/threads/flags.h ../../include/intrinsic.h \
  ../../include/threads/mmu.h ../../include/threads/pte.h \
  ../../include/threads/vaddr.h ../../include/filesys/filesys.h \
- ../../include/devices/input.h ../../include/userprog/process.h
+ ../../include/devices/input.h ../../include/userprog/process.h \
+ ../../include/filesys/directory.h ../../include/devices/disk.h \
+ ../../include/lib/inttypes.h
