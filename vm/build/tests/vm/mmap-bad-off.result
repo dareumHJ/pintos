@@ -1,2 +1,12 @@
 FAIL
-run: try to mmap invalid offset: FAILED
+Kernel panic in run: PANIC at ../../vm/file.c:82 in do_mmap(): assertion `offset % PGSIZE == 0' failed.
+Call stack: 0x80042185e1 0x80042221df 0x800421df63 0x800421d8b2 0x800421d366 0x400186 0x400c5c 0x400ca5
+Translation of call stack:
+0x00000080042185e1: debug_panic (lib/kernel/debug.c:32)
+0x00000080042221df: do_mmap (vm/file.c:84)
+0x000000800421df63: mmap (userprog/syscall.c:323)
+0x000000800421d8b2: syscall_handler (userprog/syscall.c:150)
+0x000000800421d366: no_sti (userprog/syscall-entry.o:?)
+0x0000000000400186: (unknown)
+0x0000000000400c5c: (unknown)
+0x0000000000400ca5: (unknown)

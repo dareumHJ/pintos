@@ -38,6 +38,17 @@ void check_address(void *addr){
 	if (is_kernel_vaddr(addr)) exit(-1);
 }
 
+void check_invalid_write(void *addr){
+	// struct page *p;
+	// if ((addr < (USER_STACK - (1<<20)) && addr > USER_STACK) && (p = spt_find_page(&thread_current() -> spt, addr))
+	// 		&& (p -> writable == false)){
+	// 	exit(-1);
+	// }
+	if ((addr >= (USER_STACK - (1<<20)) && addr <= USER_STACK)) return;
+	struct page *p = spt_find_page(&thread_current() -> spt, addr);
+	if (p == NULL || (p -> writable == false)) exit(-1);
+}
+
 // ADD: To allocate fd(file descriptor) from the current thread's fd table
 int allocate_fd(struct file *file){
 	/* 현재 스레드에서 관리하는 fd table을 통해 fd를 배정해줘야 함
@@ -87,6 +98,11 @@ void
 syscall_handler (struct intr_frame *f UNUSED) {
 	// TODO: Your implementation goes here.
 	int syscall_num = (f->R.rax);
+
+	#ifdef VM
+	(thread_current() -> rsp) = (f -> rsp);
+	#endif
+
 	switch(syscall_num){
 	 	case SYS_HALT:
 	 		halt();
@@ -129,6 +145,12 @@ syscall_handler (struct intr_frame *f UNUSED) {
 	 		break;
 	 	case SYS_CLOSE:
 	 		close(f->R.rdi);
+			break;
+		case SYS_MMAP:
+			(f->R.rax) = mmap(f->R.rdi, f->R.rsi, f->R.rdx, f->R.r10, f->R.r8);
+			break;
+		case SYS_MUNMAP:
+			munmap(f->R.rdi);
 	}
 }
 
@@ -211,6 +233,8 @@ int read (int fd, void *buffer, unsigned size){		/* DONE */
 	// Check the validity for the beginning of the buffer and the end of the buffer
 	check_address(buffer);
 	check_address(buffer + size - 1);
+	check_invalid_write(buffer);
+	check_invalid_write(buffer + size - 1);
 
 	struct file *open_file = find_file(fd);
 	int count;
@@ -243,6 +267,8 @@ int write (int fd, const void *buffer, unsigned size){		/* DONE */
 	// Check the validity for the beginning of the buffer and the end of the buffer
 	check_address(buffer);
 	check_address(buffer + size - 1);
+	check_invalid_write(buffer);
+	check_invalid_write(buffer + size - 1);
 
 	struct file *open_file = find_file(fd);
 	int count;
@@ -284,4 +310,18 @@ void close (int fd){		/* DONE */
 	// Free file descriptor... and set fd_index to fd for optimization of searching
 	cur_t -> fd_array[fd] = NULL;
 	cur_t -> fd_index = fd;
+}
+
+void *mmap (void *addr, size_t length, int writable, int fd, off_t offset){
+	struct file *open_file = find_file(fd);
+	if(open_file == NULL) return NULL;
+	if(file_length(open_file) == 0) return NULL;
+	if(!addr || addr != pg_round_down(addr)) return NULL;
+	if(spt_find_page(&(thread_current() -> spt), addr)) return NULL;
+	if(length == 0) return NULL;
+	return do_mmap(addr, length, writable, open_file, offset);
+}
+
+void munmap (void *addr){
+	do_munmap(addr);
 }

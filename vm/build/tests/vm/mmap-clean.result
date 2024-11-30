@@ -15,7 +15,7 @@ Differences in `diff -u' format:
   (mmap-clean) begin
   (mmap-clean) open "sample.txt"
   (mmap-clean) mmap "sample.txt"
-- (mmap-clean) write "sample.txt"
+  (mmap-clean) write "sample.txt"
 - (mmap-clean) munmap "sample.txt"
 - (mmap-clean) seek "sample.txt"
 - (mmap-clean) read "sample.txt"

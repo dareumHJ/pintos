@@ -1,15 +1,14 @@
 FAIL
-Test output failed to match any acceptable form.
-
-Acceptable output:
-  (swap-file) begin
-  (swap-file) open "large.txt"
-  (swap-file) mmap "large.txt"
-  (swap-file) end
-Differences in `diff -u' format:
-  (swap-file) begin
-  (swap-file) open "large.txt"
-  (swap-file) mmap "large.txt"
-- (swap-file) end
-
-(Process exit codes are excluded for matching purposes.)
+Kernel panic in run: PANIC at ../../vm/vm.c:151 in vm_get_frame(): todo
+Call stack: 0x80042185e1 0x80042214b9 0x80042217d7 0x800422170e 0x800421d2be 0x8004209416 0x8004209834 0x4001f3 0x400d85 0x400dce
+Translation of call stack:
+0x00000080042185e1: debug_panic (lib/kernel/debug.c:32)
+0x00000080042214b9: vm_get_frame (vm/vm.c:154)
+0x00000080042217d7: vm_do_claim_page (vm/vm.c:238)
+0x000000800422170e: vm_try_handle_fault (vm/vm.c:214)
+0x000000800421d2be: page_fault (userprog/exception.c:145)
+0x0000008004209416: intr_handler (threads/interrupt.c:352)
+0x0000008004209834: intr_entry (threads/intr-stubs.o:?)
+0x00000000004001f3: (unknown)
+0x0000000000400d85: (unknown)
+0x0000000000400dce: (unknown)

@@ -733,7 +733,7 @@ install_page (void *upage, void *kpage, bool writable) {
  * If you want to implement the function for only project 2, implement it on the
  * upper block. */
 
-static bool
+bool
 lazy_load_segment (struct page *page, void *aux) {
 	/* TODO: Load the segment from the file */
 	/* TODO: This called when the first page fault occurs on address VA. */
@@ -811,7 +811,7 @@ setup_stack (struct intr_frame *if_) {
 	 * TODO: You should mark the page is stack. */
 	/* TODO: Your code goes here */
 	/*vm_alloc_page는 vm_alloc_page_with_initializer(type, upage, writable, NULL, NULL)로 vm.h에 define 되어있음*/
-	if (vm_alloc_page(VM_ANON | VM_MARKER_STACK, stack_bottom, true) && vm_claim_page(stack_bottom)){
+	if (vm_alloc_page(VM_ANON | VM_MARKER_0, stack_bottom, true) && vm_claim_page(stack_bottom)){
 		if_ -> rsp = USER_STACK;
 		success = true;
 	}

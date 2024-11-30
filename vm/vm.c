@@ -6,6 +6,7 @@
 #include "threads/vaddr.h"
 #include "vm/vm.h"
 #include "vm/inspect.h"
+#include "userprog/process.h"
 
 // static struct hash frame_table;
 
@@ -52,7 +53,7 @@ bool
 vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writable,
 		vm_initializer *init, void *aux) {
 
-	// ASSERT (VM_TYPE(type) != VM_UNINIT)
+	ASSERT (VM_TYPE(type) != VM_UNINIT)
 
 	struct supplemental_page_table *spt = &thread_current ()->spt;
 
@@ -72,8 +73,6 @@ vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writable,
 			case VM_FILE:
 				initializer = file_backed_initializer;
 				break;
-			default:
-				goto err;
 		}
 
 		uninit_new (page, upage, init, type, aux, initializer);
@@ -164,6 +163,7 @@ vm_get_frame (void) {
 /* Growing the stack. */
 static void
 vm_stack_growth (void *addr UNUSED) {
+	vm_alloc_page(VM_ANON | VM_MARKER_0, addr, true);
 }
 
 /* Handle the fault on write_protected page */
@@ -187,10 +187,30 @@ vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
 	if (is_kernel_vaddr(addr)) return false;
 	if (!not_present) return false;
 	
-	
+	void *rsp = f -> rsp;
+	if (!user) rsp = thread_current() -> rsp;
+	if((addr >= (USER_STACK - (1<<20)) && addr <= USER_STACK) && (addr >= rsp || addr == (rsp - 8))){
+		vm_stack_growth(pg_round_down(addr));
+	}
+	// stack growth는 이견 없음? 돌리는중 아 stack_growth도 만들어야 하는 함수구나 ㅅㅂㅋㅋ바로 위에 있음
+	// 근데 pg_round_down은 왜해준거? 그 뭐냐 페이지 만드는 주소가 페이기 크기 단위로 되야 해서 근데 addr은 그 중간일 수도 있어서 setup stack이랑 똑같이 해줬음 필요없는 거는 쳐내고
+	// instruction에 나와잇구나 ㅈㅅㅋㅋ
+	// 다 한듯? 테스트 돌려볼게
+	// 아 잠만
+	// 저게 and 로 들어가면 안되잖아
+	// 엥 왜지
+	// addr == (rsp-8)인건 특수한 경우임 그럼 아예 ㅈ저 
+	// 일반적으로 addr >= rsp임
+	// 이렇게가 맞는듯?
+	// 아 근데 rsp-8이 USER STACK - (1<<20)을 벗어나는 경우도 있겠다 그지?
+	// 이렇게가 맞는듯
+	// 대답
+
+
 	page = spt_find_page(spt, addr);
 	if ((page == NULL) || (write && !(page -> writable))) return false;
 	return vm_do_claim_page (page);
+
 }
 
 /* Free the page.
@@ -261,7 +281,7 @@ supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 		if(type == VM_UNINIT){	// No need to memcpy
 			vm_initializer *init = (sp -> uninit.init);
 			void *aux = (sp -> uninit.aux);
-			vm_alloc_page_with_initializer(type, upage, writable, init, aux);
+			vm_alloc_page_with_initializer(VM_ANON, upage, writable, init, aux);
 		}
 
 		else if(type == VM_ANON){
@@ -269,6 +289,19 @@ supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 			if (!vm_claim_page(upage)) return false;
 			struct page *dp = spt_find_page (dst, upage);
 			memcpy((dp -> frame -> kva), (sp -> frame -> kva), PGSIZE);
+		}
+
+		else if(type == VM_FILE){
+			struct lazy_load_args *aux = malloc(sizeof(struct lazy_load_args));
+			aux -> file = sp -> file.file;
+			aux -> ofs = sp -> file.ofs;
+			aux -> read_bytes = sp -> file.read_bytes;
+			aux -> zero_bytes = sp -> file.zero_bytes;
+			if (!vm_alloc_page_with_initializer(type, upage, writable, NULL, aux)) return false;
+			struct page *file_page = spt_find_page(dst, upage);
+			file_backed_initializer(file_page, type, NULL);	// page -> file_page
+			file_page -> frame = sp -> frame;
+			pml4_set_page(thread_current() -> pml4, file_page -> va, sp -> frame -> kva, sp -> writable);
 		}
 	}
 

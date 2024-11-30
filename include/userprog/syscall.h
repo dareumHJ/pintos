@@ -1,6 +1,9 @@
 #ifndef USERPROG_SYSCALL_H
 #define USERPROG_SYSCALL_H
 #include <stdio.h>
+#include "filesys/directory.h"
+#include "filesys/file.h"
+#include "filesys/filesys.h"
 #include "threads/synch.h"
 #include "threads/interrupt.h"
 
@@ -8,6 +11,7 @@ struct lock syscall_lock;
 
 void syscall_init (void);
 void check_address (void *addr);
+void check_invalid_write(void *addr);
 
 void halt (void);
 void exit (int status);
@@ -23,5 +27,7 @@ int write (int fd, const void *buffer, unsigned size);
 void seek (int fd, unsigned position);
 unsigned tell (int fd);
 void close (int fd);
+void *mmap (void *addr, size_t length, int writable, int fd, off_t offset);
+void munmap (void *addr);
 
 #endif /* userprog/syscall.h */

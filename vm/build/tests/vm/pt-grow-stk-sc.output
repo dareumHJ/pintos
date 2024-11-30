@@ -14,15 +14,22 @@ Boot complete.
 Putting 'pt-grow-stk-sc' into the file system...
 Executing 'pt-grow-stk-sc':
 (pt-grow-stk-sc) begin
-pt-grow-stk-sc: exit(-1)
+(pt-grow-stk-sc) create "sample.txt"
+(pt-grow-stk-sc) open "sample.txt"
+(pt-grow-stk-sc) write "sample.txt"
+(pt-grow-stk-sc) 2nd open "sample.txt"
+(pt-grow-stk-sc) read "sample.txt"
+(pt-grow-stk-sc) compare written data against read data
+(pt-grow-stk-sc) end
+pt-grow-stk-sc: exit(0)
 Execution of 'pt-grow-stk-sc' complete.
-Timer: 80 ticks
-Thread: 32 idle ticks, 47 kernel ticks, 1 user ticks
+Timer: 90 ticks
+Thread: 36 idle ticks, 50 kernel ticks, 5 user ticks
 hd0:0: 0 reads, 0 writes
-hd0:1: 83 reads, 242 writes
+hd0:1: 123 reads, 258 writes
 hd1:0: 107 reads, 0 writes
 hd1:1: 0 reads, 0 writes
-Console: 967 characters output
+Console: 1226 characters output
 Keyboard: 0 keys pressed
-Exception: 1 page faults
+Exception: 0 page faults
 Powering off...
