@@ -17,21 +17,16 @@ Executing 'mmap-bad-off':
 (mmap-bad-off) begin
 (mmap-bad-off) open "large.txt"
 (mmap-bad-off) try to mmap invalid offset
-Kernel PANIC at ../../vm/file.c:82 in do_mmap(): assertion `offset % PGSIZE == 0' failed.
-Call stack: 0x80042185e1 0x80042221df 0x800421df63 0x800421d8b2 0x800421d366 0x400186 0x400c5c 0x400ca5 0Interrupt 0x0d (#GP General Protection Exception) at rip=800421561b
- cr2=00000000004037bc error=               0
-rax 0000800424412800 rbx 000000004747ff10 rcx 00000080040b8000 rdx 00000000000003d4
-rsp 0000008004244db0 rbp 0000008004244dc0 rsi 000000000000990f rdi 0000000000000000
-rip 000000800421561b r8 0000008004244cc8  r9 000000800421ba5a r10 0000000000000002
-r11 0000000000000202 r12 000000800421d5e3 r13 0000800420ac2c00 r14 00008004244ee000
-r15 0000010424400000 rflags 00000006
-es: 001b ds: 001b cs: 0008 ss: 0010
-Kernel PANIC recursion at ../../userprog/exception.c:97 in kill().
-Timer: 187 ticks
-Thread: 78 idle ticks, 107 kernel ticks, 2 user ticks
+(mmap-bad-off) end
+mmap-bad-off: exit(0)
+Execution of 'mmap-bad-off' complete.
+Timer: 180 ticks
+Thread: 76 idle ticks, 102 kernel ticks, 2 user ticks
 hd0:0: 0 reads, 0 writes
 hd0:1: 111 reads, 8072 writes
 hd1:0: 4017 reads, 0 writes
 hd1:1: 0 reads, 0 writes
-Console: 1813 characters output
-Key
+Console: 1109 characters output
+Keyboard: 0 keys pressed
+Exception: 0 page faults
+Powering off...

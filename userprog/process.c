@@ -312,13 +312,29 @@ process_exit (void) {
 	file_close(curr -> executing_file);
 
 	palloc_free_multiple(curr -> fd_array, 3);
-
+	
+	exit_munmap_helper(curr);
+	
 	// let parent process know that this process is terminated
 	sema_up(&curr -> wait_sema);
 	// when the parent send signal that it can be terminated, then terminate.
 	sema_down(&curr -> exit_sema);
 	// then do schedule at thread_exit
 	process_cleanup ();
+}
+
+void exit_munmap_helper (struct thread *t){
+	struct supplemental_page_table *spt = &(t->spt);
+	struct hash_iterator i;
+
+	if(hash_empty (&spt -> hash_spt)) return;
+	hash_first(&i, &(spt -> hash_spt));
+	while(hash_next(&i)){
+        struct page *sp = hash_entry(hash_cur(&i), struct page, page_elem);
+        if(sp->operations->type == VM_FILE){
+            do_munmap(sp->va);
+        }
+    }
 }
 
 /* Free the current process's resources. */

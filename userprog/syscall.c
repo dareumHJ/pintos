@@ -308,6 +308,7 @@ void close (int fd){		/* DONE */
 	if (open_file == NULL) return;
 
 	// Free file descriptor... and set fd_index to fd for optimization of searching
+	file_close(open_file);
 	cur_t -> fd_array[fd] = NULL;
 	cur_t -> fd_index = fd;
 }
@@ -319,6 +320,7 @@ void *mmap (void *addr, size_t length, int writable, int fd, off_t offset){
 	if(!addr || addr != pg_round_down(addr)) return NULL;
 	if(spt_find_page(&(thread_current() -> spt), addr)) return NULL;
 	if(length == 0) return NULL;
+	if((offset % PGSIZE) != 0) return NULL;
 	return do_mmap(addr, length, writable, open_file, offset);
 }
 

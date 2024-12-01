@@ -192,19 +192,7 @@ vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
 	if((addr >= (USER_STACK - (1<<20)) && addr <= USER_STACK) && (addr >= rsp || addr == (rsp - 8))){
 		vm_stack_growth(pg_round_down(addr));
 	}
-	// stack growth는 이견 없음? 돌리는중 아 stack_growth도 만들어야 하는 함수구나 ㅅㅂㅋㅋ바로 위에 있음
-	// 근데 pg_round_down은 왜해준거? 그 뭐냐 페이지 만드는 주소가 페이기 크기 단위로 되야 해서 근데 addr은 그 중간일 수도 있어서 setup stack이랑 똑같이 해줬음 필요없는 거는 쳐내고
-	// instruction에 나와잇구나 ㅈㅅㅋㅋ
-	// 다 한듯? 테스트 돌려볼게
-	// 아 잠만
-	// 저게 and 로 들어가면 안되잖아
-	// 엥 왜지
-	// addr == (rsp-8)인건 특수한 경우임 그럼 아예 ㅈ저 
-	// 일반적으로 addr >= rsp임
-	// 이렇게가 맞는듯?
-	// 아 근데 rsp-8이 USER STACK - (1<<20)을 벗어나는 경우도 있겠다 그지?
-	// 이렇게가 맞는듯
-	// 대답
+
 
 
 	page = spt_find_page(spt, addr);
