@@ -8,8 +8,8 @@
 #include "vm/inspect.h"
 #include "userprog/process.h"
 
-// static struct hash frame_table;
-
+// frame table with list
+struct list frame_table;
 /* Initializes the virtual memory subsystem by invoking each subsystem's
  * intialize codes. */
 void
@@ -22,7 +22,7 @@ vm_init (void) {
 	register_inspect_intr ();
 	/* DO NOT MODIFY UPPER LINES. */
 	/* TODO: Your code goes here. */
-	// hash_init(frame_table, frame_hash_func, frame_less_func, NULL);
+	list_init(&frame_table);
 
 }
 
@@ -125,6 +125,18 @@ vm_get_victim (void) {
 	struct frame *victim = NULL;
 	 /* TODO: The policy for eviction is up to you. */
 
+	for(struct list_elem *e = list_begin(&frame_table); e != list_end(&frame_table); e = list_next(e)){
+		victim = list_entry(e, struct frame, frame_elem);
+		if(pml4_is_accessed(thread_current() -> pml4, victim -> page -> va))
+			pml4_set_accessed(thread_current() -> pml4, victim -> page -> va, 0);
+		else
+			return victim;
+
+	} 
+
+
+	// victim = list_entry(list_pop_front(&frame_table), struct frame, frame_elem);
+
 	return victim;
 }
 
@@ -134,8 +146,9 @@ static struct frame *
 vm_evict_frame (void) {
 	struct frame *victim UNUSED = vm_get_victim ();
 	/* TODO: swap out the victim and return the evicted frame. */
+	swap_out(victim -> page);
 
-	return NULL;
+	return victim;
 }
 
 /* palloc() and get frame. If there is no available page, evict the page
@@ -148,12 +161,16 @@ vm_get_frame (void) {
 	/* TODO: Fill this function. */
 	void *kva = palloc_get_page(PAL_USER);
 	if (kva == NULL){
-		PANIC("todo"); //to be implemented
+		frame = vm_evict_frame();
+		frame -> page = NULL;
+		return frame;
 	}
 
 	frame = malloc(sizeof(struct frame));
 	frame -> page = NULL;
 	frame -> kva = kva;
+
+	list_push_back (&frame_table, &(frame -> frame_elem));
 
 	ASSERT (frame != NULL);
 	ASSERT (frame->page == NULL);
@@ -308,16 +325,4 @@ supplemental_page_table_kill (struct supplemental_page_table *spt UNUSED) {
 hash_action_func *page_destructor(struct hash_elem *e, void *aux) {
 	struct page *p = hash_entry(e, struct page, page_elem);
 	vm_dealloc_page(p);
-}
-
-uint64_t frame_hash_func (const struct hash_elem *e, void *aux UNUSED){
-	struct frame *frame = hash_entry(e, struct frame, frame_elem);
-	//hash_bytes in hash.h
-	return hash_bytes(&(frame->kva), sizeof(frame -> kva));
-}
-
-bool frame_less_func (const struct hash_elem *a, const struct hash_elem *b, void *aux UNUSED){
-	struct frame *frame_a = hash_entry(a, struct frame, frame_elem);
-	struct frame *frame_b = hash_entry(b, struct frame, frame_elem);
-	return (frame_a -> kva) < (frame_b -> kva);
 }

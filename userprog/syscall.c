@@ -316,11 +316,21 @@ void close (int fd){		/* DONE */
 void *mmap (void *addr, size_t length, int writable, int fd, off_t offset){
 	struct file *open_file = find_file(fd);
 	if(open_file == NULL) return NULL;
+
 	if(file_length(open_file) == 0) return NULL;
+
+	if(is_kernel_vaddr(addr)) return NULL;
+	if(is_kernel_vaddr(addr + length)) return NULL;
+	if(addr + length == 0) return NULL;
+
 	if(!addr || addr != pg_round_down(addr)) return NULL;
+
 	if(spt_find_page(&(thread_current() -> spt), addr)) return NULL;
+
 	if(length == 0) return NULL;
+
 	if((offset % PGSIZE) != 0) return NULL;
+
 	return do_mmap(addr, length, writable, open_file, offset);
 }
 
