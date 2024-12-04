@@ -12,8 +12,9 @@ userprog/syscall.o: ../../userprog/syscall.c \
  ../../include/lib/kernel/hash.h ../../include/lib/kernel/list.h \
  ../../include/threads/palloc.h ../../include/vm/uninit.h \
  ../../include/vm/anon.h ../../include/vm/file.h \
- ../../include/threads/loader.h ../../include/userprog/gdt.h \
- ../../include/threads/flags.h ../../include/intrinsic.h \
- ../../include/threads/mmu.h ../../include/threads/pte.h \
- ../../include/threads/vaddr.h ../../include/devices/input.h \
+ ../../include/threads/loader.h ../../include/threads/malloc.h \
+ ../../include/userprog/gdt.h ../../include/threads/flags.h \
+ ../../include/intrinsic.h ../../include/threads/mmu.h \
+ ../../include/threads/pte.h ../../include/threads/vaddr.h \
+ ../../include/filesys/inode.h ../../include/devices/input.h \
  ../../include/userprog/process.h

@@ -21,7 +21,7 @@ Executing 'mmap-ro':
 mmap-ro: exit(-1)
 Execution of 'mmap-ro' complete.
 Timer: 195 ticks
-Thread: 86 idle ticks, 103 kernel ticks, 6 user ticks
+Thread: 91 idle ticks, 100 kernel ticks, 4 user ticks
 hd0:0: 0 reads, 0 writes
 hd0:1: 111 reads, 8074 writes
 hd1:0: 4018 reads, 0 writes

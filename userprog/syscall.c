@@ -1,13 +1,16 @@
 #include "userprog/syscall.h"
 #include <stdio.h>
 #include <syscall-nr.h>
+#include <debug.h>
 #include "threads/interrupt.h"
 #include "threads/thread.h"
 #include "threads/loader.h"
+#include "threads/malloc.h"
 #include "userprog/gdt.h"
 #include "threads/flags.h"
 #include "intrinsic.h"
 #include "filesys/file.h" // include +
+#include "filesys/inode.h"
 #include "filesys/filesys.h" // include +
 #include "threads/synch.h" // include +
 #include "devices/input.h" // include +
@@ -32,10 +35,30 @@ void syscall_handler (struct intr_frame *);
 
 // To implement syscalls, virtual address space에서 data를 읽고 쓸 방법을 구현해야 함....
 // System call의 인자로 들어온 pointer로부터 data를 읽어야 할 때 필요. (그래서 여기서 구현)
+
+#ifndef VM
 void check_address(void *addr){
 	// if (addr == NULL || is_kernel_vaddr(addr) || pml4_get_page(thread_current() -> pml4, addr) == NULL)
 	if (addr == NULL) exit(-1);
 	if (is_kernel_vaddr(addr)) exit(-1);
+}
+#else
+struct page *check_address(void *addr) {
+	struct thread *cur_t = thread_current();
+	if (addr == NULL || is_kernel_vaddr(addr) || (spt_find_page(&cur_t -> spt, addr) == NULL)){
+		exit(-1);
+	}
+	return spt_find_page(&cur_t -> spt, addr);
+}
+#endif
+
+
+void check_valid_buffer(void *buffer, size_t size, bool writable){
+	if ((buffer >= (USER_STACK - (1<<20)) && buffer <= USER_STACK)) return;
+	for (int i = 0; i < size; i++){
+		struct page *page = check_address(buffer + i);
+		if (page == NULL || (writable && !(page -> writable))) exit(-1);
+	}
 }
 
 void check_invalid_write(void *addr){
@@ -231,10 +254,11 @@ int read (int fd, void *buffer, unsigned size){		/* DONE */
 	   lock을 걸어줘야 한다*/
 
 	// Check the validity for the beginning of the buffer and the end of the buffer
-	check_address(buffer);
-	check_address(buffer + size - 1);
-	check_invalid_write(buffer);
-	check_invalid_write(buffer + size - 1);
+	// check_address(buffer);
+	check_valid_buffer(buffer, size, true);
+	// check_address(buffer + size - 1);
+	// check_invalid_write(buffer);
+	// check_invalid_write(buffer + size - 1);
 
 	struct file *open_file = find_file(fd);
 	int count;
@@ -265,10 +289,9 @@ int write (int fd, const void *buffer, unsigned size){		/* DONE */
 	   이번에도 읽는 동안은 lock을 걸어서 읽는 내용에 변화가 없게 해줘야 함*/
 
 	// Check the validity for the beginning of the buffer and the end of the buffer
-	check_address(buffer);
-	check_address(buffer + size - 1);
-	check_invalid_write(buffer);
-	check_invalid_write(buffer + size - 1);
+	// check_address(buffer);
+	check_valid_buffer(buffer, size, false);
+	// check_address(buffer + size - 1);
 
 	struct file *open_file = find_file(fd);
 	int count;
@@ -281,6 +304,7 @@ int write (int fd, const void *buffer, unsigned size){		/* DONE */
 	else if (open_file == NULL) return -1;	// In case of the fd is not valid
 
 	else {
+		if (open_file != NULL && !is_file_writable(open_file)) exit(-1);
 		lock_acquire(&syscall_lock);
 		count = file_write(open_file, buffer, size);
 		lock_release(&syscall_lock);

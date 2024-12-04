@@ -10,8 +10,13 @@
 struct lock syscall_lock;
 
 void syscall_init (void);
+#ifndef VM
 void check_address (void *addr);
+#else
+struct page *check_address(void *addr);
+#endif
 void check_invalid_write(void *addr);
+void check_valid_buffer(void *buffer, size_t size, bool writable);
 
 void halt (void);
 void exit (int status);

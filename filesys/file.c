@@ -1,5 +1,6 @@
 #include "filesys/file.h"
 #include <debug.h>
+#include <stdio.h>
 #include "filesys/inode.h"
 #include "threads/malloc.h"
 
@@ -122,6 +123,13 @@ file_deny_write (struct file *file) {
 		file->deny_write = true;
 		inode_deny_write (file->inode);
 	}
+}
+
+bool
+is_file_writable (struct file *file) {
+	ASSERT (file != NULL);
+	if (file->deny_write) return false;
+	return true;
 }
 
 /* Re-enables write operations on FILE's underlying inode.
