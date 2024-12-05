@@ -14,7 +14,8 @@ userprog/process.o: ../../userprog/process.c \
  ../../include/vm/file.h ../../include/lib/round.h \
  ../../include/lib/stdlib.h ../../include/lib/string.h \
  ../../include/userprog/gdt.h ../../include/threads/loader.h \
- ../../include/userprog/tss.h ../../include/threads/flags.h \
- ../../include/threads/init.h ../../include/threads/mmu.h \
- ../../include/threads/pte.h ../../include/threads/vaddr.h \
- ../../include/intrinsic.h ../../include/threads/mmu.h
+ ../../include/userprog/tss.h ../../include/userprog/syscall.h \
+ ../../include/threads/flags.h ../../include/threads/init.h \
+ ../../include/threads/mmu.h ../../include/threads/pte.h \
+ ../../include/threads/vaddr.h ../../include/intrinsic.h \
+ ../../include/threads/mmu.h

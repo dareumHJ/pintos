@@ -237,11 +237,12 @@ void donate_priority() {
 	int cur_depth = 0;
 	int donor_priority = cur_t -> priority;
 
-	while ((cur_t -> waiting_lock) != NULL){
+	while ((cur_t -> waiting_lock) != NULL){ 
 		// let the donation does not propagate over the given depth...
 		if (cur_depth >= priority_depth) break;
 
 		holder = (cur_t -> waiting_lock -> holder);
+		if (holder == NULL) break;		//		하.............이놈때문이었네
 		(holder -> priority) = donor_priority;
 		cur_t = holder;
 		cur_depth++;

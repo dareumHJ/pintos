@@ -18,7 +18,6 @@ Executing 'page-merge-mm':
 (page-merge-mm) init
 (page-merge-mm) sort chunk 0
 (page-merge-mm) sort chunk 1
-child-qsort-mm: exit(80)
 (page-merge-mm) sort chunk 2
 child-qsort-mm: exit(80)
 (page-merge-mm) sort chunk 3
@@ -28,6 +27,7 @@ child-qsort-mm: exit(80)
 (page-merge-mm) sort chunk 5
 child-qsort-mm: exit(80)
 (page-merge-mm) sort chunk 6
+child-qsort-mm: exit(80)
 child-qsort-mm: exit(80)
 (page-merge-mm) sort chunk 7
 child-qsort-mm: exit(80)
@@ -46,13 +46,13 @@ child-qsort-mm: exit(80)
 (page-merge-mm) end
 page-merge-mm: exit(0)
 Execution of 'page-merge-mm' complete.
-Timer: 4143 ticks
-Thread: 43 idle ticks, 67 kernel ticks, 4033 user ticks
+Timer: 623 ticks
+Thread: 99 idle ticks, 59 kernel ticks, 466 user ticks
 hd0:0: 0 reads, 0 writes
-hd0:1: 4876 reads, 6726 writes
+hd0:1: 4880 reads, 6726 writes
 hd1:0: 224 reads, 0 writes
 hd1:1: 0 reads, 0 writes
-Console: 1862 characters output
+Console: 1860 characters output
 Keyboard: 0 keys pressed
 Exception: 0 page faults
 Powering off...

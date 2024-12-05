@@ -1,4 +1,4 @@
-TOTAL TESTING SCORE: 89.0%
+TOTAL TESTING SCORE: 100.0%
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
@@ -10,12 +10,12 @@ tests/threads/Rubric.alarm                      7/  7   1.0%/  1.0%
 tests/threads/Rubric.priority                  25/ 25   1.0%/  1.0%
 tests/userprog/Rubric.functionality            40/ 40   8.0%/  8.0%
 tests/userprog/Rubric.robustness               40/ 40   5.0%/  5.0%
-tests/vm/Rubric.functionality                  67/ 82  49.0%/ 60.0%
+tests/vm/Rubric.functionality                  82/ 82  60.0%/ 60.0%
 tests/vm/Rubric.robustness                     29/ 29  20.0%/ 20.0%
 tests/filesys/base/Rubric                      17/ 17   5.0%/  5.0%
 tests/vm/cow/Rubric                             0/  1   0.0%/ 25.0%
 --------------------------------------------- --- --- ------ ------
-Total                                                  89.0%/125.0%
+Total                                                 100.0%/125.0%
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
@@ -176,9 +176,9 @@ Functionality of virtual memory subsystem (tests/vm/Rubric.functionality):
 	     4/ 4 tests/vm/page-parallel
 	     2/ 2 tests/vm/page-shuffle
 	     2/ 2 tests/vm/page-merge-seq
-	  ** 0/ 5 tests/vm/page-merge-par
-	  ** 0/ 5 tests/vm/page-merge-mm
-	  ** 0/ 5 tests/vm/page-merge-stk
+	     5/ 5 tests/vm/page-merge-par
+	     5/ 5 tests/vm/page-merge-mm
+	     5/ 5 tests/vm/page-merge-stk
 
 	- Test "mmap" system call.
 	     1/ 1 tests/vm/mmap-read
@@ -204,8 +204,8 @@ Functionality of virtual memory subsystem (tests/vm/Rubric.functionality):
 	     4/ 4 tests/vm/lazy-file
 
 	- Section summary.
-	     24/ 27 tests passed
-	     67/ 82 points subtotal
+	     27/ 27 tests passed
+	     82/ 82 points subtotal
 
 Robustness of virtual memory subsystem (tests/vm/Rubric.robustness):
 	- Test robustness of page table support.
@@ -273,195 +273,6 @@ Functionality of copy-on-write (tests/vm/cow/Rubric):
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
-DETAILS OF tests/vm/page-merge-par FAILURE:
-
-run: wait for child 0: FAILED
-
-OUTPUT FROM tests/vm/page-merge-par:
-
-Kernel command line: -q -f put page-merge-par put child-sort run page-merge-par
-0 ~ 9fc00 1
-100000 ~ 13e0000 1
-Pintos booting with: 
-	base_mem: 0x0 ~ 0x9fc00 (Usable: 639 kB)
-	ext_mem: 0x100000 ~ 0x13e0000 (Usable: 19,328 kB)
-Calibrating timer...  157,081,600 loops/s.
-hd0:0: detected 337 sector (168 kB) disk, model "QEMU HARDDISK", serial "QM00001"
-hd0:1: detected 20,160 sector (9 MB) disk, model "QEMU HARDDISK", serial "QM00002"
-hd1:0: detected 218 sector (109 kB) disk, model "QEMU HARDDISK", serial "QM00003"
-hd1:1: detected 20,160 sector (9 MB) disk, model "QEMU HARDDISK", serial "QM00004"
-Formatting file system...done.
-Boot complete.
-Putting 'page-merge-par' into the file system...
-Putting 'child-sort' into the file system...
-Executing 'page-merge-par':
-(page-merge-par) begin
-(page-merge-par) init
-(page-merge-par) sort chunk 0
-(page-merge-par) sort chunk 1
-load: child-sort: open failed
-child-sort: exit(-1)
-(page-merge-par) sort chunk 2
-load: child-sort: open failed
-child-sort: exit(-1)
-(page-merge-par) sort chunk 3
-load: child-sort: open failed
-child-sort: exit(-1)
-(page-merge-par) sort chunk 4
-load: child-sort: open failed
-child-sort: exit(-1)
-(page-merge-par) sort chunk 5
-load: child-sort: open failed
-child-sort: exit(-1)
-(page-merge-par) sort chunk 6
-load: child-sort: open failed
-child-sort: exit(-1)
-(page-merge-par) sort chunk 7
-load: child-sort: open failed
-child-sort: exit(-1)
-(page-merge-par) wait for child 0
-(page-merge-par) wait for child 0: FAILED
-page-merge-par: exit(1)
-Execution of 'page-merge-par' complete.
-Timer: 223 ticks
-Thread: 65 idle ticks, 64 kernel ticks, 95 user ticks
-hd0:0: 0 reads, 0 writes
-hd0:1: 391 reads, 4666 writes
-hd1:0: 218 reads, 0 writes
-hd1:1: 0 reads, 0 writes
-Console: 1727 characters output
-Keyboard: 0 keys pressed
-Exception: 0 page faults
-Powering off...
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
-DETAILS OF tests/vm/page-merge-mm FAILURE:
-
-run: wait for child 0: FAILED
-
-OUTPUT FROM tests/vm/page-merge-mm:
-
-Kernel command line: -q -f put page-merge-mm put child-qsort-mm run page-merge-mm
-0 ~ 9fc00 1
-100000 ~ 13e0000 1
-Pintos booting with: 
-	base_mem: 0x0 ~ 0x9fc00 (Usable: 639 kB)
-	ext_mem: 0x100000 ~ 0x13e0000 (Usable: 19,328 kB)
-Calibrating timer...  209,510,400 loops/s.
-hd0:0: detected 337 sector (168 kB) disk, model "QEMU HARDDISK", serial "QM00001"
-hd0:1: detected 20,160 sector (9 MB) disk, model "QEMU HARDDISK", serial "QM00002"
-hd1:0: detected 224 sector (112 kB) disk, model "QEMU HARDDISK", serial "QM00003"
-hd1:1: detected 20,160 sector (9 MB) disk, model "QEMU HARDDISK", serial "QM00004"
-Formatting file system...done.
-Boot complete.
-Putting 'page-merge-mm' into the file system...
-Putting 'child-qsort-mm' into the file system...
-Executing 'page-merge-mm':
-(page-merge-mm) begin
-(page-merge-mm) init
-(page-merge-mm) sort chunk 0
-(page-merge-mm) sort chunk 1
-load: child-qsort-mm: open failed
-child-qsort-mm: exit(-1)
-(page-merge-mm) sort chunk 2
-load: child-qsort-mm: open failed
-child-qsort-mm: exit(-1)
-(page-merge-mm) sort chunk 3
-load: child-qsort-mm: open failed
-child-qsort-mm: exit(-1)
-(page-merge-mm) sort chunk 4
-load: child-qsort-mm: open failed
-child-qsort-mm: exit(-1)
-(page-merge-mm) sort chunk 5
-load: child-qsort-mm: open failed
-child-qsort-mm: exit(-1)
-(page-merge-mm) sort chunk 6
-load: child-qsort-mm: open failed
-child-qsort-mm: exit(-1)
-(page-merge-mm) sort chunk 7
-load: child-qsort-mm: open failed
-child-qsort-mm: exit(-1)
-(page-merge-mm) wait for child 0
-(page-merge-mm) wait for child 0: FAILED
-page-merge-mm: exit(1)
-Execution of 'page-merge-mm' complete.
-Timer: 215 ticks
-Thread: 58 idle ticks, 60 kernel ticks, 97 user ticks
-hd0:0: 0 reads, 0 writes
-hd0:1: 392 reads, 4678 writes
-hd1:0: 224 reads, 0 writes
-hd1:1: 0 reads, 0 writes
-Console: 1773 characters output
-Keyboard: 0 keys pressed
-Exception: 0 page faults
-Powering off...
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
-DETAILS OF tests/vm/page-merge-stk FAILURE:
-
-run: wait for child 0: FAILED
-
-OUTPUT FROM tests/vm/page-merge-stk:
-
-Kernel command line: -q -f put page-merge-stk put child-qsort run page-merge-stk
-0 ~ 9fc00 1
-100000 ~ 13e0000 1
-Pintos booting with: 
-	base_mem: 0x0 ~ 0x9fc00 (Usable: 639 kB)
-	ext_mem: 0x100000 ~ 0x13e0000 (Usable: 19,328 kB)
-Calibrating timer...  209,510,400 loops/s.
-hd0:0: detected 337 sector (168 kB) disk, model "QEMU HARDDISK", serial "QM00001"
-hd0:1: detected 20,160 sector (9 MB) disk, model "QEMU HARDDISK", serial "QM00002"
-hd1:0: detected 224 sector (112 kB) disk, model "QEMU HARDDISK", serial "QM00003"
-hd1:1: detected 20,160 sector (9 MB) disk, model "QEMU HARDDISK", serial "QM00004"
-Formatting file system...done.
-Boot complete.
-Putting 'page-merge-stk' into the file system...
-Putting 'child-qsort' into the file system...
-Executing 'page-merge-stk':
-(page-merge-stk) begin
-(page-merge-stk) init
-(page-merge-stk) sort chunk 0
-(page-merge-stk) sort chunk 1
-load: child-qsort: open failed
-child-qsort: exit(-1)
-(page-merge-stk) sort chunk 2
-load: child-qsort: open failed
-child-qsort: exit(-1)
-(page-merge-stk) sort chunk 3
-load: child-qsort: open failed
-child-qsort: exit(-1)
-(page-merge-stk) sort chunk 4
-load: child-qsort: open failed
-child-qsort: exit(-1)
-(page-merge-stk) sort chunk 5
-load: child-qsort: open failed
-child-qsort: exit(-1)
-(page-merge-stk) sort chunk 6
-load: child-qsort: open failed
-child-qsort: exit(-1)
-(page-merge-stk) sort chunk 7
-load: child-qsort: open failed
-child-qsort: exit(-1)
-(page-merge-stk) wait for child 0
-(page-merge-stk) wait for child 0: FAILED
-page-merge-stk: exit(1)
-Execution of 'page-merge-stk' complete.
-Timer: 217 ticks
-Thread: 65 idle ticks, 59 kernel ticks, 93 user ticks
-hd0:0: 0 reads, 0 writes
-hd0:1: 391 reads, 4678 writes
-hd1:0: 224 reads, 0 writes
-hd1:1: 0 reads, 0 writes
-Console: 1743 characters output
-Keyboard: 0 keys pressed
-Exception: 0 page faults
-Powering off...
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
 DETAILS OF tests/vm/cow/cow-simple FAILURE:
 
 run: two phys addrs should be the same.: FAILED
@@ -474,7 +285,7 @@ Kernel command line: -q -f put cow-simple run cow-simple
 Pintos booting with: 
 	base_mem: 0x0 ~ 0x9fc00 (Usable: 639 kB)
 	ext_mem: 0x100000 ~ 0x13e0000 (Usable: 19,328 kB)
-Calibrating timer...  209,510,400 loops/s.
+Calibrating timer...  157,081,600 loops/s.
 hd0:0: detected 337 sector (168 kB) disk, model "QEMU HARDDISK", serial "QM00001"
 hd0:1: detected 20,160 sector (9 MB) disk, model "QEMU HARDDISK", serial "QM00002"
 hd1:0: detected 4,019 sector (1 MB) disk, model "QEMU HARDDISK", serial "QM00003"
@@ -494,8 +305,8 @@ child: exit(1)
 (cow-simple) end
 cow-simple: exit(0)
 Execution of 'cow-simple' complete.
-Timer: 188 ticks
-Thread: 82 idle ticks, 100 kernel ticks, 6 user ticks
+Timer: 186 ticks
+Thread: 75 idle ticks, 106 kernel ticks, 5 user ticks
 hd0:0: 0 reads, 0 writes
 hd0:1: 90 reads, 8066 writes
 hd1:0: 4019 reads, 0 writes

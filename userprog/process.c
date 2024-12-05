@@ -8,6 +8,7 @@
 #include <list.h>
 #include "userprog/gdt.h"
 #include "userprog/tss.h"
+#include "userprog/syscall.h"
 #include "filesys/directory.h"
 #include "filesys/file.h"
 #include "filesys/filesys.h"
@@ -500,6 +501,7 @@ load (const char *file_name, struct intr_frame *if_) {
 	process_activate (thread_current ());
 
 	/* Open executable file. */
+	lock_acquire(&syscall_lock);
 	file = filesys_open (file_name);
 	if (file == NULL) {
 		printf ("load: %s: open failed\n", file_name);
@@ -597,6 +599,7 @@ done:
 	/* We arrive here whether the load is successful or not. */
 	/* Modified(from file_close()): keep opening the executing file */
 	/* file(executing) will be closed in process_exit() */
+	lock_release(&syscall_lock);
 	return success;
 }
 

@@ -36,40 +36,20 @@ void syscall_handler (struct intr_frame *);
 // To implement syscalls, virtual address space에서 data를 읽고 쓸 방법을 구현해야 함....
 // System call의 인자로 들어온 pointer로부터 data를 읽어야 할 때 필요. (그래서 여기서 구현)
 
-#ifndef VM
 void check_address(void *addr){
 	// if (addr == NULL || is_kernel_vaddr(addr) || pml4_get_page(thread_current() -> pml4, addr) == NULL)
 	if (addr == NULL) exit(-1);
 	if (is_kernel_vaddr(addr)) exit(-1);
 }
-#else
-struct page *check_address(void *addr) {
-	struct thread *cur_t = thread_current();
-	if (addr == NULL || is_kernel_vaddr(addr) || (spt_find_page(&cur_t -> spt, addr) == NULL)){
-		exit(-1);
-	}
-	return spt_find_page(&cur_t -> spt, addr);
-}
-#endif
-
 
 void check_valid_buffer(void *buffer, size_t size, bool writable){
 	if ((buffer >= (USER_STACK - (1<<20)) && buffer <= USER_STACK)) return;
-	for (int i = 0; i < size; i++){
-		struct page *page = check_address(buffer + i);
+	struct thread *cur_t = thread_current();
+	for (int i = 0; i < size; i+=8){
+		if (buffer + i == NULL || is_kernel_vaddr(buffer + i)) exit(-1);
+		struct page *page = spt_find_page(&cur_t -> spt, buffer + i);
 		if (page == NULL || (writable && !(page -> writable))) exit(-1);
 	}
-}
-
-void check_invalid_write(void *addr){
-	// struct page *p;
-	// if ((addr < (USER_STACK - (1<<20)) && addr > USER_STACK) && (p = spt_find_page(&thread_current() -> spt, addr))
-	// 		&& (p -> writable == false)){
-	// 	exit(-1);
-	// }
-	if ((addr >= (USER_STACK - (1<<20)) && addr <= USER_STACK)) return;
-	struct page *p = spt_find_page(&thread_current() -> spt, addr);
-	if (p == NULL || (p -> writable == false)) exit(-1);
 }
 
 // ADD: To allocate fd(file descriptor) from the current thread's fd table
@@ -212,11 +192,17 @@ int wait (int pid){
 
 bool create (const char *file, unsigned initial_size){		/* DONE */
 	check_address(file);
-	return filesys_create(file, initial_size);
+	lock_acquire(&syscall_lock);
+	bool succ = filesys_create(file, initial_size);
+	lock_release(&syscall_lock);
+	return succ;
 }
 bool remove (const char *file){		/* DONE */
 	check_address(file);
-	return filesys_remove(file);
+	lock_acquire(&syscall_lock);
+	bool succ = filesys_remove(file);
+	lock_release(&syscall_lock);
+	return succ;
 }
 
 int open (const char *file){		/* DONE */
@@ -228,7 +214,9 @@ int open (const char *file){		/* DONE */
 	check_address(file);
 
 	// Check whether open file IS NOT NULL
+	lock_acquire(&syscall_lock);
 	struct file *open_file = filesys_open(file);
+	lock_release(&syscall_lock);
 	if (open_file == NULL) return -1;
 
 	// Check whether file descriptor IS NOT -1 (NO remaining space in fd_table)
@@ -256,9 +244,6 @@ int read (int fd, void *buffer, unsigned size){		/* DONE */
 	// Check the validity for the beginning of the buffer and the end of the buffer
 	// check_address(buffer);
 	check_valid_buffer(buffer, size, true);
-	// check_address(buffer + size - 1);
-	// check_invalid_write(buffer);
-	// check_invalid_write(buffer + size - 1);
 
 	struct file *open_file = find_file(fd);
 	int count;
@@ -291,7 +276,6 @@ int write (int fd, const void *buffer, unsigned size){		/* DONE */
 	// Check the validity for the beginning of the buffer and the end of the buffer
 	// check_address(buffer);
 	check_valid_buffer(buffer, size, false);
-	// check_address(buffer + size - 1);
 
 	struct file *open_file = find_file(fd);
 	int count;
@@ -333,6 +317,7 @@ void close (int fd){		/* DONE */
 
 	// Free file descriptor... and set fd_index to fd for optimization of searching
 	file_close(open_file);
+	if(fd < 2 || fd >= FD_LIMIT) return;
 	cur_t -> fd_array[fd] = NULL;
 	cur_t -> fd_index = fd;
 }
